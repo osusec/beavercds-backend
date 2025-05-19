@@ -91,8 +91,8 @@ fn challenge_two_levels() {
                 directory: PathBuf::from("foo/test"),
                 challenge_id: "asdf".to_string(),
 
-                flag: FlagType::Text {
-                    text: "test{it-works}".to_string()
+                flag: FlagType::String {
+                    string: "test{it-works}".to_string()
                 },
 
                 provide: vec![],
