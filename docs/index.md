@@ -23,7 +23,7 @@ features:
   - title: Control Challenge Deployment
     icon: ⚙️
     details: Quickly enable or disable challenges to control exactly what is live for players.
-    link: /for-sysadmins/config
+    link: /for-sysadmins/config-reference
 
   - title: Simple yet flexible
     icon: ✏️

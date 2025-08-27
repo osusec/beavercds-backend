@@ -8,8 +8,15 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: "Home", link: "/" },
-      // { text: "Examples", link: "/markdown-examples" },
+      { text: "Setup", link: "for-sysadmins/quickstart" },
+      {
+        text: "Config Reference",
+        link: "for-sysadmins/config-reference",
+      },
+      {
+        text: "Challenge Reference",
+        link: "for-authors/challenge-reference",
+      },
     ],
 
     // auto generate sidebar from directory structure, via vitepress-sidebar
@@ -19,10 +26,14 @@ export default defineConfig({
       useTitleFromFileHeading: true,
       useTitleFromFrontmatter: true,
       keepMarkdownSyntaxFromTitle: true,
+      useFolderTitleFromIndexFile: true,
       // transform name to sentence case
       hyphenToSpace: true,
       underscoreToSpace: true,
-      capitalizeEachWords: true,
+      // capitalizeEachWords: true,
+
+      sortFolderTo: "bottom",
+      sortMenusByFrontmatterOrder: true,
     }),
 
     socialLinks: [
