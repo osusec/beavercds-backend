@@ -2,7 +2,7 @@
 title: <code>rcds.yaml</code> Reference
 ---
 
-# `rcds.yaml`
+# `rcds.yaml` Config Reference
 
 `rcds.yaml` is the 'global' config for beaverCDS. This defines what challenges
 are available, where to deploy them to, and what credentials to use for building

@@ -1,4 +1,6 @@
-# Install
+# Getting Started
+
+## Installation
 
 Install `beavercds` via Cargo or install from source:
 

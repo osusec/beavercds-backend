@@ -58,10 +58,10 @@ description: |
 
 ## `category`
 
-The category for the challenge.
+The category for the challenge, parsed from the directory structure.
 
 ::: warning
-This is set from the expected directory structure of `<category>/<challenge>/challenge.yaml` and will overwrite whatever is set in the file.
+This is automatically set from the expected directory structure of `<category>/<name>/challenge.yaml` and should not be set in the file.
 :::
 
 ## `difficulty`
@@ -205,7 +205,14 @@ Cannot contain spaces or punctuation, only alphanumeric and `-`.
 
 ### `.build`
 
-Build the container image for this pod from a local `Dockerfile`. Supports a subset of the [docker-compose build spec](https://docs.docker.com/reference/compose-file/build/#illustrative-example) (`dockerfile`, `context`, `args`).
+Build the container image for this pod from a local `Dockerfile`. Supports a subset of the [docker-compose build spec](https://docs.docker.com/reference/compose-file/build/#illustrative-example),
+either:
+  - a string path to the build context folder
+  - yaml with explicit `context` path, `dockerfile` path within context folder,
+    and `args` build args (only `context`, `dockerfile`, and `args` are
+    supported)
+
+The build context directory is relative to the `challenge.yaml`, and the `dockerfile` is relative to the context directory.
 
 Conflicts with [`image`](#image).
 

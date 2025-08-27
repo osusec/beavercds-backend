@@ -11,11 +11,11 @@ export default defineConfig({
       { text: "Setup", link: "guides/infra-quickstart" },
       {
         text: "Config Reference",
-        link: "reference/config-reference",
+        link: "reference/rcds-yaml-reference",
       },
       {
         text: "Challenge Reference",
-        link: "reference/challenge-reference",
+        link: "reference/challenge-yaml-reference",
       },
     ],
 
