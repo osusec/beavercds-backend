@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Get started
-      link: /install
+      link: /getting-started
     - theme: alt
       text: Add a challenge
       link: /guides/challenge-quickstart
@@ -18,7 +18,7 @@ features:
   - title: Quick setup
     icon: 🚀
     details: beaverCDS can get you from a fresh cluster to ready for challenges in minutes.
-    link: /guides/infra-quickstart
+    link: /getting-started
 
   - title: Control Challenge Deployment
     icon: ⚙️
