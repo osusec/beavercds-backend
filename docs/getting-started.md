@@ -21,4 +21,4 @@ the future so that users will not need to compile from git source.
 ## Next Steps
 
 After installing the `beavercds` binary, get started with [setting up the
-challenges repo](for-sysadmins/quickstart) or [writing challenges](for-authors/quickstart).
+challenges repo](/guides/infra-quickstart) or [writing challenges](/guides/challenge-quickstart).
