@@ -1,3 +1,0 @@
----
-title: For Challenge Authors
----

@@ -9,24 +9,24 @@ hero:
   actions:
     - theme: brand
       text: Get started
-      link: /for-sysadmins/quickstart
+      link: /install
     - theme: alt
       text: Add a challenge
-      link: /for-authors/quickstart
+      link: /guides/challenge-quickstart
 
 features:
   - title: Quick setup
     icon: 🚀
     details: beaverCDS can get you from a fresh cluster to ready for challenges in minutes.
-    link: /for-sysadmins/quickstart
+    link: /guides/infra-quickstart
 
   - title: Control Challenge Deployment
     icon: ⚙️
     details: Quickly enable or disable challenges to control exactly what is live for players.
-    link: /for-sysadmins/config-reference
+    link: /reference/config-reference
 
   - title: Simple yet flexible
     icon: ✏️
     details: Adding a new challenge is simpler than ever.
-    link: /for-authors/quickstart
+    link: /guides/challenge-quickstart
 ---
