@@ -8,14 +8,14 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: "Setup", link: "for-sysadmins/quickstart" },
+      { text: "Setup", link: "guides/infra-quickstart" },
       {
         text: "Config Reference",
-        link: "for-sysadmins/config-reference",
+        link: "reference/config-reference",
       },
       {
         text: "Challenge Reference",
-        link: "for-authors/challenge-reference",
+        link: "reference/challenge-reference",
       },
     ],
 
