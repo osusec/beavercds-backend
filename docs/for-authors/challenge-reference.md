@@ -1,4 +1,8 @@
-# Challenge Config Reference
+---
+title: <code>challenge.yaml</code> Reference
+---
+
+# `challenge.yaml` Config Reference
 
 Challenge configuration is expected to be at `<category>/<name>/challenge.yaml`.
 

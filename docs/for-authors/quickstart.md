@@ -1,16 +1,25 @@
-# Challenge Config Quickstart
+# Challenge Quickstart
 
 All information about a challenge is configured in a `challenge.yaml` in the
 challenge's directory in the repo, generally `<category>/<name>`.
 
-For a tldr: see a full example for  [a TCP/`nc` challenge](#full-tcp-example) or [a web challenge](#full-http-example).
+There are a few [complete examples](#examples) at the bottom of the page.
 
-### Metadata
+### Name
 
-Self explanatory.
+The challenge name can contain any characters, though whitespace or special
+characters may be removed in some cases.
 
 ```yaml
 name: yet another pyjail
+```
+
+### Author
+
+The author or authors that created this challenge. Multiple authors are not
+handled
+
+```yaml
 author: somebody, John Author
 ```
 
@@ -152,14 +161,14 @@ description: |-
 
   {{ nc }}
 
+flag:
+  file: ./flag
+
 provide:
   - from: main
     include:
       - /chal/notsh
       - /lib/x86_64-linux-gnu/libc.so.6
-
-flag:
-  file: ./flag
 
 pods:
   - name: main
@@ -198,4 +207,23 @@ pods:
       - internal: 80
         expose:
           http: bar # subdomain only
+```
+
+## Full static file example
+
+```yaml
+name: ghostint
+author: the guessers geo
+description: |
+  where was this picture taken?
+
+  flag format: `example{LAT__LONG}`, rounded to five places
+
+difficulty: 1
+
+flag:
+  string: "example{51.51771__-0.20495}"
+
+provide:
+  - the-view-from-your-balcony.png
 ```
