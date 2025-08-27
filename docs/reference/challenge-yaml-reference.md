@@ -70,7 +70,7 @@ This is automatically set from the expected directory structure of `<category>/<
 Not implemented yet, does nothing
 :::
 
-The difficulty from the challenge, used to set point values. Values correspond to entries in the [rcds.yaml difficulty settings](../for-sysadmins/config#difficulty).
+The difficulty from the challenge, used to set point values. Values correspond to entries in the [rcds.yaml difficulty settings](rcds-yaml-reference#difficulty).
 
 ```yaml
 difficulty: 1 # the current default
@@ -261,7 +261,7 @@ Set the desired CPU architecture to run this pod on.
 
 The resource usage request and limits for the pod. Kubernetes will make sure the requested resources will be available for this pod to use, and will also restart the pod if it goes over these limits.
 
-If not set, the default set in [`rcds.yaml`](../for-sysadmins/config#rcds.yaml) is used.
+If not set, the default set in [`rcds.yaml`](rcds-yaml-reference#resources) is used.
 
 ### `.replicas`
 
