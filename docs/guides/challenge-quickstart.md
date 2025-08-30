@@ -101,7 +101,7 @@ port the container is listening on, and either a port number or http subdomain.
   exposed at `<subdomain>.<challenges_domain>` with an HTTPS cert.
 
 ::: code-group
-```yaml [For TCP challenges] {8-10}
+```yaml [For TCP challenges] {8-11}
 pods:
   - name: main
     build:
@@ -109,12 +109,12 @@ pods:
       dockerfile: Dockerfile
     replicas: 2
     ports:
-      - internal: 31337   # the port the container listens on
+      - internal: 31337   # <-- what your container listens on
         expose:
-          tcp: 30124      # exposed at <challenges-domain>:30124
+          tcp: 30124      # <-- would expose at chals.example.ctf:30124
 ```
 
-```yaml [For web challenges] {8-10}
+```yaml [For web challenges] {8-11}
 pods:
   - name: main
     build:
@@ -122,9 +122,9 @@ pods:
       dockerfile: Dockerfile
     replicas: 2
     ports:
-      - internal: 31337   # the port the container listens on
+      - internal: 31337   # <-- what your container listens on
         expose:
-          http: my-chal   # exposed at https://my-chal.<challenges-domain>
+          http: my-chal   # <-- would expose at https://my-chal.chals.example.ctf
 ```
 :::
 
