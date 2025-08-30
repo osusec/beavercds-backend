@@ -6,9 +6,18 @@ title: <code>challenge.yaml</code> Reference
 
 Challenge configuration is expected to be at `<category>/<name>/challenge.yaml`.
 
+There are some examples available on the [challenge quickstart guide](/guides/challenge-quickstart#examples).
+
+Available fields:
+
 [[toc]]
 
-## `name`
+`*` denotes required fields.
+
+## `name`*
+
+- type: `string`
+- no default
 
 The name of the challenge, as shown to players in the frontend UI.
 
@@ -19,7 +28,10 @@ name: notsh
 name: Revenge of the FIPS
 ```
 
-## `author`
+## `author`*
+
+- type: `string`
+- no default
 
 Author or authors of the challenge, as shown to players in the frontend UI. If there are multiple authors, specify them as one string.
 
@@ -30,7 +42,10 @@ author: John Author
 author: Alice, Bob, and others
 ```
 
-## `description`
+## `description`*
+
+- type: `string`
+- no default
 
 Description and flavortext for the challenge, as shown to players in the frontend UI. Supports templating to include information about the challenge, such as the link or command to connect.
 
@@ -58,6 +73,9 @@ description: |
 
 ## `category`
 
+- type: `string`
+- default: from folder structure
+
 The category for the challenge, parsed from the directory structure.
 
 ::: warning
@@ -65,6 +83,9 @@ This is automatically set from the expected directory structure of `<category>/<
 :::
 
 ## `difficulty`
+
+- type: `integer`
+- no default
 
 ::: info
 Not implemented yet, does nothing
@@ -76,7 +97,10 @@ The difficulty from the challenge, used to set point values. Values correspond t
 difficulty: 1 # the current default
 ```
 
-## `flag`
+## `flag`*
+
+- type: `string` | `dict`
+- no default
 
 Where to find the flag for the challenge. The flag can be in a file, a regex, or a direct string.
 
@@ -98,6 +122,9 @@ Regex flags are not implemented yet and setting one does nothing
 :::
 
 ## `provide`
+
+- type: list of `string`/`dict`
+- default: `[]` (no files)
 
 List of files to provide to the players on the frontend UI. These files can be from the challenge directory or from a container image built for a [challenge pod](#pods), and uploaded individually or zipped together.
 
@@ -152,6 +179,9 @@ provide: []
 
 ### `.include`
 
+- type: list of `string`
+- no default
+
 File or list of files to upload individually, or include in a zip if `as` is set.
 
 When uploading, only the basename is used and the path to the file is discarded.
@@ -160,15 +190,24 @@ If a provide item is specified as a single string, it is interpreted as an `incl
 
 ### `.as`
 
+- type: `string`
+- no default
+
 If `.include` is a single file, rename to this name while uploading.
 
 If multiple files, zip them together into the given zip file.
 
 ### `.from`
 
+- type: `string`
+- no default
+
 Fetch these files from the corresponding [challenge pod](#pods) image.
 
 ## `pods`
+
+- type: list of `dict`
+- default: `[]` (no pods)
 
 Defines how to build and deploy any services needed for the challenge.
 
@@ -199,11 +238,17 @@ pods: []
 
 ### `.name`
 
+- type: `string`
+- no default
+
 Name of the pod, used to refer to this container as [a source for `provide` files](#provide) and for generated resource names.
 
 Cannot contain spaces or punctuation, only alphanumeric and `-`.
 
 ### `.build`
+
+- type: `string` | `dict`
+- no default
 
 Build the container image for this pod from a local `Dockerfile`. Supports a subset of the [docker-compose build spec](https://docs.docker.com/reference/compose-file/build/#illustrative-example),
 either:
@@ -235,11 +280,17 @@ Conflicts with [`image`](#image).
 
 ### `.image`
 
+- type: `string`
+- no default
+
 Use an available container image for the pod instead of building one from source.
 
 Conflicts with [`build`](#build).
 
 ### `.env`
+
+- type: `dict`
+- default: `{}` (no envvars)
 
 Any environment variables to set for the running pod. Specify as `name: value`.
 
@@ -250,20 +301,37 @@ env:
 
 ### `.architecture`
 
-Set the desired CPU architecture to run this pod on.
+- type: `string`
+- default: `"amd64"`
+
+Set the desired CPU architecture to run this pod on. Kubernetes uses GOARCH architecture names.
 
 ```yaml
-    architecture: amd64   # AKA x86_64; the default
-    architecture: arm64   # for ARM
+architecture: amd64
+architecture: arm64
 ```
 
 ### `.resources`
 
-The resource usage request and limits for the pod. Kubernetes will make sure the requested resources will be available for this pod to use, and will also restart the pod if it goes over these limits.
+- type: `dict`
+- default: global default from `rcds.yaml`
+
+The CPU and memory resources that will be reserved for this pod. Kubernetes will make sure the requested amounts will be available for this pod to use, and will also restart the pod if it goes over these limits.
+
+Uses the [Kubernetes resource units](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes).
 
 If not set, the default set in [`rcds.yaml`](rcds-yaml-reference#resources) is used.
 
+```yaml
+resources:
+  cpu: 1
+  memory: 512Mi
+```
+
 ### `.replicas`
+
+- type: `number`
+- default: `2`
 
 How many instances of the pod to run. Traffic is load-balanced between instances.
 
@@ -275,14 +343,68 @@ replicas: 2 # the default
 
 ### `.ports`
 
-Specfies how to expose this pod to players, either as a raw TCP port or HTTP at a specific domain.
+- type: list of `dict`
+- default: `[]`
 
-#### `.ports.internal`
+List of ports to expose to players.
 
-The port the container is listening on; i.e. `xinetd` or `nginx` etc.
+#### `.ports[].internal`
 
-#### `.ports.expose`
+- type: `number`
+- no default
 
-How to expose the internal container port
+The port that the challenge container (i.e. `xinetd`/`nginx`/etc inside) is listening on.
+
+#### `.ports[].expose`
+
+- type: `dict`
+- no default
+
+How to expose the internal container port to players -- either as a TCP port or a subdirectory for web challenges. Must be one of the following:
+
+**`.ports[].expose.tcp`**
+
+- type: `number`
+- no default
+
+The port to expose the challenge over raw TCP at on the challenge subdomain. Must be unique across all other exposed TCP challenges.
+
+```yaml [For TCP challenges] {8-10}
+pods:
+  - #...
+    ports:
+      - internal: 31337   # the port the container listens on
+        expose:
+          tcp: 30124      # exposed at <challenges-domain>:30124
+```
+
+**`.ports[].expose.http`**
+
+- type: `string`
+- no default
+
+The subdomain to expose the challenge at as a website (port 80/443). This is prepended to the global challenge subdomain. The cluster will provision an SSL certificate for the site.
+
+Must be a valid DNS domain name (alphanumeric, `_`, `-`).
+
+```yaml [For web challenges] {8-10}
+pods:
+  - name: main
+    build:
+      context: .
+      dockerfile: Dockerfile
+    replicas: 2
+    ports:
+      - internal: 31337   # the port the container listens on
+        expose:
+          http: my-chal   # exposed at https://my-chal.<challenges-domain>
+```
 
 ### `.volume`
+
+- type: `string`
+- no default
+
+::: info
+Not implemented yet, does nothing
+:::
