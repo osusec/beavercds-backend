@@ -74,9 +74,11 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
         .merge(Serialized::default("category", category))
         .extract()?;
 
-    // coerce pod env lists to maps
-    // TODO: do this in serde deserialize?
+    let config = get_config()?;
+
     for pod in parsed.pods.iter_mut() {
+        // coerce pod env lists to maps
+        // TODO: do this in serde deserialize?
         pod.env = match pod.env.clone() {
             ListOrMap::Map(m) => ListOrMap::Map(m),
             ListOrMap::List(l) => {
@@ -104,6 +106,11 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
                     });
                 ListOrMap::Map(map)
             }
+        };
+
+        // set default resources from global config
+        if pod.resources.is_none() {
+            pod.resources = Some(config.defaults.resources.clone())
         }
     }
 
@@ -231,10 +238,19 @@ fn default_difficulty() -> i64 {
 #[fully_pub]
 enum FlagType {
     RawString(String),
-    File { file: PathBuf },
-    Text { text: String },
-    Regex { regex: String },
-    Verifier { verifier: String },
+    File {
+        file: PathBuf,
+    },
+    String {
+        #[serde(alias = "text")]
+        string: String,
+    },
+    Regex {
+        regex: String,
+    },
+    Verifier {
+        verifier: String,
+    },
 }
 
 // Parse each distinct kind of Provide action as a separate enum variant
@@ -246,6 +262,10 @@ enum ProvideConfig {
     /// Upload file(s) as-is.
     /// Single or multiple files with no as: or from:
     /// Default if only a string is given.
+    FromRepoSingle {
+        #[serde(rename = "include")]
+        file: PathBuf,
+    },
     FromRepo {
         #[serde(rename = "include")]
         files: Vec<PathBuf>,
@@ -299,8 +319,8 @@ enum ProvideConfig {
 impl FromStr for ProvideConfig {
     type Err = Void;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        Ok(ProvideConfig::FromRepo {
-            files: vec![PathBuf::from(s)],
+        Ok(ProvideConfig::FromRepoSingle {
+            file: PathBuf::from(s),
         })
     }
 }
