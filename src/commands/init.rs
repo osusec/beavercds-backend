@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::Write;
 use std::process::exit;
@@ -7,18 +7,16 @@ use tracing::error;
 use crate::init::{self as init, templatize_init};
 use crate::{access_handlers::frontend, commands::deploy};
 
-pub fn run(_interactive: &bool, _blank: &bool) -> Result<()> {
-    let options: init::InitVars;
-
-    if *_interactive {
-        options = init::interactive_init()?;
-    } else if *_blank {
-        options = init::blank_init();
+pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
+    let options = if *interactive {
+        init::interactive_init()?
+    } else if *blank {
+        init::blank_init()
     } else {
-        options = init::example_init();
-    }
+        init::example_init()
+    };
 
-    let configuration = templatize_init(options);
+    let configuration = templatize_init(options).context("could not render template")?;
 
     let mut f = File::create("rcds.yaml")?;
     f.write_all(configuration.as_bytes())?;

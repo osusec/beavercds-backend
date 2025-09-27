@@ -1,13 +1,17 @@
+use anyhow::Result;
 use inquire;
 use minijinja;
 use regex::Regex;
 use serde;
 use std::fmt;
+use tracing::{debug, error, info, trace, warn};
+
+use crate::utils::render_strict;
 
 pub mod example_values;
 pub mod templates;
 
-#[derive(serde::Serialize, Default)]
+#[derive(serde::Serialize, Default, Debug)]
 pub struct InitVars {
     pub flag_regex: String,
     pub registry_domain: String,
@@ -22,7 +26,7 @@ pub struct InitVars {
     pub profiles: Vec<Profile>,
 }
 
-#[derive(Clone, serde::Serialize, Default)]
+#[derive(Clone, serde::Serialize, Default, Debug)]
 pub struct Points {
     pub difficulty: String,
     pub min: String,
@@ -39,7 +43,7 @@ impl fmt::Display for Points {
     }
 }
 
-#[derive(serde::Serialize, Default)]
+#[derive(serde::Serialize, Default, Debug)]
 pub struct Profile {
     pub profile_name: String,
     pub frontend_url: String,
@@ -274,10 +278,12 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
 }
 
 pub fn blank_init() -> InitVars {
+    trace!("building blank config");
     InitVars::default()
 }
 
 pub fn example_init() -> InitVars {
+    trace!("building example values config");
     InitVars {
         flag_regex: String::from(example_values::FLAG_REGEX),
         registry_domain: String::from(example_values::REGISTRY_DOMAIN),
@@ -315,6 +321,7 @@ pub fn example_init() -> InitVars {
     }
 }
 
-pub fn templatize_init(options: InitVars) -> String {
-    minijinja::render!(templates::RCDS, options)
+pub fn templatize_init(options: InitVars) -> Result<String> {
+    debug!("rendering template with {options:?}");
+    render_strict(templates::RCDS, minijinja::context! {options})
 }
