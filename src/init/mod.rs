@@ -4,10 +4,10 @@ use regex::Regex;
 use serde;
 use std::fmt;
 
-pub mod templates;
 pub mod example_values;
+pub mod templates;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Default)]
 pub struct InitVars {
     pub flag_regex: String,
     pub registry_domain: String,
@@ -22,7 +22,7 @@ pub struct InitVars {
     pub profiles: Vec<Profile>,
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Serialize, Default)]
 pub struct Points {
     pub difficulty: String,
     pub min: String,
@@ -39,7 +39,7 @@ impl fmt::Display for Points {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Default)]
 pub struct Profile {
     pub profile_name: String,
     pub frontend_url: String,
@@ -70,40 +70,42 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
 
         registry_domain: {
             inquire::Text::new ("Container registry:")
-            .with_help_message("Hosted challenges will be hosted in a container registry.The connection endpoint and the repository name.") 
+            .with_help_message("Hosted challenges will be hosted in a container registry.The connection endpoint and the repository name.")
             .with_placeholder(example_values::REGISTRY_DOMAIN)
             .prompt()?
         },
 
         registry_build_user: {
-            inquire::Text::new ("Container registry 'build' user:")
-            .with_help_message("The username that will be used to push built containers.")
-            .with_placeholder(example_values::REGISTRY_BUILD_USER)
-            .prompt()?
+            inquire::Text::new("Container registry 'build' user:")
+                .with_help_message("The username that will be used to push built containers.")
+                .with_placeholder(example_values::REGISTRY_BUILD_USER)
+                .prompt()?
         },
 
         // TODO: do we actually want to be in charge of these credentials vs expecting the local building utility already be logged in?
         registry_build_pass: {
             inquire::Password::new("Container registry 'build' password:")
-            .with_help_message("The password to the 'build' user account") // TODO: could this support username:pat too?
-            .with_display_mode(inquire::PasswordDisplayMode::Masked)
-            .with_custom_confirmation_message("Enter again:")
-            .prompt()?
+                .with_help_message("The password to the 'build' user account") // TODO: could this support username:pat too?
+                .with_display_mode(inquire::PasswordDisplayMode::Masked)
+                .with_custom_confirmation_message("Enter again:")
+                .prompt()?
         },
 
         registry_cluster_user: {
-            inquire::Text::new ("Container registry 'cluster' user:")
-            .with_help_message("The username that the cluster will use to pull locally-built containers.")
-            .with_placeholder(example_values::REGISTRY_CLUSTER_USER)
-            .prompt()?
+            inquire::Text::new("Container registry 'cluster' user:")
+                .with_help_message(
+                    "The username that the cluster will use to pull locally-built containers.",
+                )
+                .with_placeholder(example_values::REGISTRY_CLUSTER_USER)
+                .prompt()?
         },
 
         registry_cluster_pass: {
             inquire::Password::new("Container registry 'cluster' password:")
-            .with_help_message("The password to the 'cluster' user account")
-            .with_display_mode(inquire::PasswordDisplayMode::Masked)
-            .with_custom_confirmation_message("Enter again:")
-            .prompt()?
+                .with_help_message("The password to the 'cluster' user account")
+                .with_display_mode(inquire::PasswordDisplayMode::Masked)
+                .with_custom_confirmation_message("Enter again:")
+                .prompt()?
         },
 
         points: {
@@ -117,10 +119,10 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
                 let points_obj = Points {
                     difficulty: {
                         inquire::Text::new("Difficulty class:")
-                        .with_validator(inquire::required!("Please provide a name."))
-                        .with_help_message("The name of the difficulty class.")
-                        .with_placeholder(example_values::POINTS_DIFFICULTY)
-                        .prompt()?
+                            .with_validator(inquire::required!("Please provide a name."))
+                            .with_help_message("The name of the difficulty class.")
+                            .with_placeholder(example_values::POINTS_DIFFICULTY)
+                            .prompt()?
                     },
                     min: {
                         inquire::CustomType::<u64>::new("Minimum points:")
@@ -211,9 +213,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
                     },
                     frontend_token: {
                         inquire::Text::new("Frontend token:")
-                            .with_help_message(
-                                "The token to authenticate into the RNG scoreboard.",
-                            )
+                            .with_help_message("The token to authenticate into the RNG scoreboard.")
                             .with_placeholder(example_values::PROFILES_FRONTEND_TOKEN)
                             .prompt()?
                     },
@@ -269,42 +269,16 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             profiles
         },
     };
-    return Ok(options);
+
+    Ok(options)
 }
 
 pub fn blank_init() -> InitVars {
-    return InitVars {
-        flag_regex: String::new(),
-        registry_domain: String::new(),
-        registry_build_user: String::new(),
-        registry_build_pass: String::new(),
-        registry_cluster_user: String::new(),
-        registry_cluster_pass: String::new(),
-        defaults_difficulty: String::new(),
-        defaults_resources_cpu: String::new(),
-        defaults_resources_memory: String::new(),
-        points: vec![Points {
-            difficulty: String::new(),
-            min: String::new(),
-            max: String::new(),
-        }],
-        profiles: vec![Profile {
-            profile_name: String::from(example_values::PROFILES_PROFILE_NAME),
-            frontend_url: String::new(),
-            frontend_token: String::new(),
-            challenges_domain: String::new(),
-            kubecontext: String::new(),
-            s3_bucket_name: String::new(),
-            s3_endpoint: String::new(),
-            s3_region: String::new(),
-            s3_accesskey: String::new(),
-            s3_secretaccesskey: String::new(),
-        }],
-    };
+    InitVars::default()
 }
 
 pub fn example_init() -> InitVars {
-    return InitVars {
+    InitVars {
         flag_regex: String::from(example_values::FLAG_REGEX),
         registry_domain: String::from(example_values::REGISTRY_DOMAIN),
         registry_build_user: String::from(example_values::REGISTRY_BUILD_USER),
@@ -338,10 +312,9 @@ pub fn example_init() -> InitVars {
             s3_accesskey: String::from(example_values::PROFILES_S3_ACCESSKEY),
             s3_secretaccesskey: String::from(example_values::PROFILES_S3_SECRETACCESSKEY),
         }],
-    };
+    }
 }
 
 pub fn templatize_init(options: InitVars) -> String {
-    let filled_template = minijinja::render!(templates::RCDS, options);
-    return filled_template;
+    minijinja::render!(templates::RCDS, options)
 }
