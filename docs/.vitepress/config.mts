@@ -10,12 +10,31 @@ export default defineConfig({
     nav: [
       { text: "Setup", link: "guides/infra-quickstart" },
       {
-        text: "Config Reference",
-        link: "reference/rcds-yaml-reference",
+        text: "Guides",
+        items: [
+          { text: "Deployment Quickstart", link: "for-sysadmins/quickstart" },
+          { text: "Add new challenge", link: "for-authors/quickstart" },
+        ],
+      },
+
+      {
+        text: "Infrastructure Setup",
+        items: [
+          { text: "Quickstart", link: "/for-sysadmins/quickstart" },
+          { text: "Install", link: "/for-sysadmins/install" },
+          { text: "Config Reference", link: "/for-sysadmins/config" },
+          { text: "Architecture", link: "/for-sysadmins/architecture" },
+        ],
       },
       {
-        text: "Challenge Reference",
-        link: "reference/challenge-yaml-reference",
+        text: "Challenge Authors",
+        items: [
+          { text: "Challenge Quickstart", link: "/for-authors/quickstart" },
+          {
+            text: "Challenge Config Reference",
+            link: "/for-authors/challenge-config",
+          },
+        ],
       },
     ],
 

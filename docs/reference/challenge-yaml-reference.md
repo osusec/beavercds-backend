@@ -19,12 +19,13 @@ Available fields:
 - type: `string`
 - no default
 
-The name of the challenge, as shown to players in the frontend UI.
+The name of the challenge, as shown to players in the frontend UI. Any
+characters are allowed.
 
 ```yaml
 name: notsh
-
-# can have spaces:
+name: cha-cha-cha
+# name can have spaces:
 name: Revenge of the FIPS
 ```
 
@@ -33,11 +34,11 @@ name: Revenge of the FIPS
 - type: `string`
 - no default
 
-Author or authors of the challenge, as shown to players in the frontend UI. If there are multiple authors, specify them as one string.
+Author or authors of the challenge, as shown to players in the frontend UI. If
+there are multiple authors, specify them as one string.
 
 ```yaml
 author: John Author
-
 # multiple authors:
 author: Alice, Bob, and others
 ```
@@ -47,7 +48,9 @@ author: Alice, Bob, and others
 - type: `string`
 - no default
 
-Description and flavortext for the challenge, as shown to players in the frontend UI. Supports templating to include information about the challenge, such as the link or command to connect.
+Description and flavortext for the challenge, as shown to players in the
+frontend UI. Supports templating to include information about the challenge,
+such as the link or command to connect.
 
 Most challenges only need `{{ nc }}` or `{{ link }}`.
 
