@@ -168,30 +168,20 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             }
         },
 
-        defaults_resources_cpu: {
-            let resources = inquire::Text::new("Default CPU limit:")
+        defaults_resources_cpu:   inquire::Text::new("Default CPU limit:")
             .with_help_message("The default limit of CPU resources per challenge pod.\nhttps://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes")
             .with_placeholder(example_values::DEFAULTS_RESOURCES_CPU)
-            .prompt()?;
-
-            if resources.is_empty() {
-                String::from(example_values::DEFAULTS_RESOURCES_CPU)
-            } else {
-                resources
-            }
-        },
+            .with_default(example_values::DEFAULTS_RESOURCES_CPU)
+            .prompt()?
+        ,
 
         defaults_resources_memory: {
-            let resources = inquire::Text::new("Default memory limit:")
+            inquire::Text::new("Default memory limit:")
             .with_help_message("The default limit of CPU resources per challenge pod.\nhttps://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes")
             .with_placeholder(example_values::DEFAULTS_RESOURCES_MEMORY)
-            .prompt()?;
+            .with_default(example_values::DEFAULTS_RESOURCES_MEMORY)
+            .prompt()?
 
-            if resources.is_empty() {
-                String::from(example_values::DEFAULTS_RESOURCES_MEMORY)
-            } else {
-                resources
-            }
         },
 
         profiles: {
@@ -285,38 +275,38 @@ pub fn blank_init() -> InitVars {
 pub fn example_init() -> InitVars {
     trace!("building example values config");
     InitVars {
-        flag_regex: String::from(example_values::FLAG_REGEX),
-        registry_domain: String::from(example_values::REGISTRY_DOMAIN),
-        registry_build_user: String::from(example_values::REGISTRY_BUILD_USER),
-        registry_build_pass: String::from(example_values::REGISTRY_BUILD_PASS),
-        registry_cluster_user: String::from(example_values::REGISTRY_CLUSTER_USER),
-        registry_cluster_pass: String::from(example_values::REGISTRY_CLUSTER_USER),
-        defaults_difficulty: String::from(example_values::DEFAULTS_DIFFICULTY),
-        defaults_resources_cpu: String::from(example_values::DEFAULTS_RESOURCES_CPU),
-        defaults_resources_memory: String::from(example_values::DEFAULTS_RESOURCES_MEMORY),
+        flag_regex: example_values::FLAG_REGEX.to_string(),
+        registry_domain: example_values::REGISTRY_DOMAIN.to_string(),
+        registry_build_user: example_values::REGISTRY_BUILD_USER.to_string(),
+        registry_build_pass: example_values::REGISTRY_BUILD_PASS.to_string(),
+        registry_cluster_user: example_values::REGISTRY_CLUSTER_USER.to_string(),
+        registry_cluster_pass: example_values::REGISTRY_CLUSTER_USER.to_string(),
+        defaults_difficulty: example_values::DEFAULTS_DIFFICULTY.to_string(),
+        defaults_resources_cpu: example_values::DEFAULTS_RESOURCES_CPU.to_string(),
+        defaults_resources_memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
         points: vec![
             Points {
-                difficulty: String::from(example_values::POINTS_DIFFICULTY),
-                min: String::from(example_values::POINTS_MIN),
-                max: String::from(example_values::POINTS_MAX),
+                difficulty: example_values::POINTS_DIFFICULTY.to_string(),
+                min: example_values::POINTS_MIN.to_string(),
+                max: example_values::POINTS_MAX.to_string(),
             },
             Points {
-                difficulty: String::from("2"),
-                min: String::from("1"),
-                max: String::from("1337"),
+                difficulty: "2".to_string(),
+                min: "1".to_string(),
+                max: "1337".to_string(),
             },
         ],
         profiles: vec![Profile {
-            profile_name: String::from(example_values::PROFILES_PROFILE_NAME),
-            frontend_url: String::from(example_values::PROFILES_FRONTEND_URL),
-            frontend_token: String::from(example_values::PROFILES_FRONTEND_TOKEN),
-            challenges_domain: String::from(example_values::PROFILES_CHALLENGES_DOMAIN),
-            kubecontext: String::from(example_values::PROFILES_KUBECONTEXT),
-            s3_bucket_name: String::from(example_values::PROFILES_S3_BUCKET_NAME),
-            s3_endpoint: String::from(example_values::PROFILES_S3_ENDPOINT),
-            s3_region: String::from(example_values::PROFILES_S3_REGION),
-            s3_accesskey: String::from(example_values::PROFILES_S3_ACCESSKEY),
-            s3_secretaccesskey: String::from(example_values::PROFILES_S3_SECRETACCESSKEY),
+            profile_name: example_values::PROFILES_PROFILE_NAME.to_string(),
+            frontend_url: example_values::PROFILES_FRONTEND_URL.to_string(),
+            frontend_token: example_values::PROFILES_FRONTEND_TOKEN.to_string(),
+            challenges_domain: example_values::PROFILES_CHALLENGES_DOMAIN.to_string(),
+            kubecontext: example_values::PROFILES_KUBECONTEXT.to_string(),
+            s3_bucket_name: example_values::PROFILES_S3_BUCKET_NAME.to_string(),
+            s3_endpoint: example_values::PROFILES_S3_ENDPOINT.to_string(),
+            s3_region: example_values::PROFILES_S3_REGION.to_string(),
+            s3_accesskey: example_values::PROFILES_S3_ACCESSKEY.to_string(),
+            s3_secretaccesskey: example_values::PROFILES_S3_SECRETACCESSKEY.to_string(),
         }],
     }
 }
