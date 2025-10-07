@@ -53,7 +53,7 @@ pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
 pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> {
     info!("deploying cert-manager chart...");
 
-    const VALUES: &str = include_str!("../asset_files/setup_manifests/cert-manager.helm.yaml");
+    const VALUES: &str = include_str!("../asset_files/setup_manifests/cert-manager.values.yaml");
     trace!("values:\n{}", VALUES);
 
     install_helm_chart(
@@ -89,7 +89,7 @@ pub async fn install_extdns(profile: &config::ProfileConfig) -> Result<()> {
     info!("deploying external-dns chart...");
 
     const VALUES_TEMPLATE: &str =
-        include_str!("../asset_files/setup_manifests/external-dns.helm.yaml.j2");
+        include_str!("../asset_files/setup_manifests/external-dns.values.yaml.j2");
 
     // add profile dns: field directly to chart values
     let values = render_strict(
