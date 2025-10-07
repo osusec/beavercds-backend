@@ -1,0 +1,14 @@
+# set Traefik's ingress class
+ingressClass:
+  name: beavercds
+providers:
+  kubernetesCRD:
+    ingressClass: beavercds
+  kubernetesIngress:
+    ingressClass: beavercds
+
+  # enable Gateway
+  kubernetesGateway:
+    enabled: true
+    # TCPRoute Gateway is still experimental
+    experimentalChannel: true

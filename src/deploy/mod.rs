@@ -36,7 +36,7 @@ pub async fn check_setup(profile: &ProfileConfig) -> Result<()> {
                 .unwrap_or(0)
         };
     }
-    let expected_charts = ["ingress-nginx", "cert-manager", "external-dns"];
+    let expected_charts = ["traefik", "cert-manager", "external-dns"];
     let latest_releases = expected_charts
         .iter()
         .map(|chart| {

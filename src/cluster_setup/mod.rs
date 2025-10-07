@@ -33,21 +33,21 @@ use crate::utils::render_strict;
 pub const INGRESS_NAMESPACE: &str = "ingress";
 
 pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
-    info!("deploying ingress-nginx chart...");
+    info!("deploying traefik ingress chart...");
 
-    const VALUES: &str = include_str!("../asset_files/setup_manifests/ingress-nginx.helm.yaml");
+    const VALUES: &str = include_str!("../asset_files/setup_manifests/traefik.values.yaml");
     trace!("values:\n{}", VALUES);
 
     install_helm_chart(
         profile,
-        "ingress-nginx",
-        "https://kubernetes.github.io/ingress-nginx",
+        "traefik",
+        "https://traefik.github.io/charts",
         None,
-        "ingress-nginx",
+        "traefik",
         INGRESS_NAMESPACE,
         VALUES,
     )
-    .context("failed to install ingress-nginx helm chart")
+    .context("failed to install traefik helm chart")
 }
 
 pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> {
