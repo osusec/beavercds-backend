@@ -4,7 +4,7 @@ use std::io::Write;
 use std::process::exit;
 use tracing::error;
 
-use crate::init::{self as init, templatize_init};
+use crate::init;
 use crate::{access_handlers::frontend, commands::deploy};
 
 pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
@@ -16,7 +16,7 @@ pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
         init::example_init()
     };
 
-    let configuration = templatize_init(options).context("could not render template")?;
+    let configuration = init::templatize_init(options).context("could not render template")?;
 
     let mut f = File::create("rcds.yaml")?;
     f.write_all(configuration.as_bytes())?;
