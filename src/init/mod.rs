@@ -3,9 +3,11 @@ use inquire;
 use minijinja;
 use regex::Regex;
 use serde;
+use std::collections::HashMap;
 use std::fmt;
 use tracing::{debug, error, info, trace, warn};
 
+use crate::configparser::config;
 use crate::utils::render_strict;
 
 pub mod example_values;
@@ -22,18 +24,18 @@ pub struct InitVars {
     pub defaults_difficulty: String,
     pub defaults_resources_cpu: String,
     pub defaults_resources_memory: String,
-    pub points: Vec<Points>,
-    pub profiles: Vec<Profile>,
+    pub points: Vec<InitPoints>,
+    pub profiles: Vec<InitProfile>,
 }
 
 #[derive(Clone, serde::Serialize, Default, Debug)]
-pub struct Points {
+pub struct InitPoints {
     pub difficulty: String,
     pub min: String,
     pub max: String,
 }
 
-impl fmt::Display for Points {
+impl fmt::Display for InitPoints {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -44,7 +46,7 @@ impl fmt::Display for Points {
 }
 
 #[derive(serde::Serialize, Default, Debug)]
-pub struct Profile {
+pub struct InitProfile {
     pub profile_name: String,
     pub frontend_url: String,
     pub frontend_token: String,
@@ -61,7 +63,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
     println!("For all prompts below, simply press Enter to leave blank.");
     println!("All fields that can be set in rcds.yaml can also be set via environment variables.");
 
-    let points_ranks_reference: Vec<Points>;
+    let points_ranks_reference: Vec<InitPoints>;
 
     let options = InitVars {
         flag_regex: {
@@ -118,9 +120,9 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
                 .with_default(false)
                 .prompt()?;
             println!("Challenge points are dynamic. For a static challenge, simply set minimum and maximum points to the same value.");
-            let mut points_ranks: Vec<Points> = Vec::new();
+            let mut points_ranks: Vec<InitPoints> = Vec::new();
             while again {
-                let points_obj = Points {
+                let points_obj = InitPoints {
                     difficulty: {
                         inquire::Text::new("Difficulty class:")
                             .with_validator(inquire::required!("Please provide a name."))
@@ -190,9 +192,9 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             let mut again = inquire::Confirm::new("Do you want to provide a Profile?")
                 .with_default(false)
                 .prompt()?;
-            let mut profiles: Vec<Profile> = Vec::new();
+            let mut profiles: Vec<InitProfile> = Vec::new();
             while again {
-                let prof = Profile {
+                let prof = InitProfile {
                     profile_name: {
                         inquire::Text::new("Profile name:")
                         .with_help_message("The name of the deployment Profile. One Profile named \"default\" is recommended. You can add additional profiles.")
@@ -267,47 +269,51 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
     Ok(options)
 }
 
-pub fn blank_init() -> InitVars {
+pub fn blank_init() -> config::RcdsConfig {
     trace!("building blank config");
-    InitVars::default()
+    config::RcdsConfig {
+        flag_regex: "".to_string(),
+        ..Default::default()
+    }
 }
 
-pub fn example_init() -> InitVars {
+pub fn example_init() -> config::RcdsConfig {
     trace!("building example values config");
-    InitVars {
+
+    config::RcdsConfig {
         flag_regex: example_values::FLAG_REGEX.to_string(),
-        registry_domain: example_values::REGISTRY_DOMAIN.to_string(),
-        registry_build_user: example_values::REGISTRY_BUILD_USER.to_string(),
-        registry_build_pass: example_values::REGISTRY_BUILD_PASS.to_string(),
-        registry_cluster_user: example_values::REGISTRY_CLUSTER_USER.to_string(),
-        registry_cluster_pass: example_values::REGISTRY_CLUSTER_USER.to_string(),
-        defaults_difficulty: example_values::DEFAULTS_DIFFICULTY.to_string(),
-        defaults_resources_cpu: example_values::DEFAULTS_RESOURCES_CPU.to_string(),
-        defaults_resources_memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
-        points: vec![
-            Points {
-                difficulty: example_values::POINTS_DIFFICULTY.to_string(),
-                min: example_values::POINTS_MIN.to_string(),
-                max: example_values::POINTS_MAX.to_string(),
+        registry: config::Registry {
+            domain: example_values::REGISTRY_DOMAIN.to_string(),
+            tag_format: String::new(),
+            build: config::UserPass {
+                user: example_values::REGISTRY_BUILD_USER.to_string(),
+                pass: example_values::REGISTRY_BUILD_PASS.to_string(),
             },
-            Points {
-                difficulty: "2".to_string(),
-                min: "1".to_string(),
-                max: "1337".to_string(),
+            cluster: config::UserPass {
+                user: example_values::REGISTRY_CLUSTER_USER.to_string(),
+                pass: example_values::REGISTRY_CLUSTER_PASS.to_string(),
             },
-        ],
-        profiles: vec![Profile {
-            profile_name: example_values::PROFILES_PROFILE_NAME.to_string(),
-            frontend_url: example_values::PROFILES_FRONTEND_URL.to_string(),
-            frontend_token: example_values::PROFILES_FRONTEND_TOKEN.to_string(),
-            challenges_domain: example_values::PROFILES_CHALLENGES_DOMAIN.to_string(),
-            kubecontext: example_values::PROFILES_KUBECONTEXT.to_string(),
-            s3_bucket_name: example_values::PROFILES_S3_BUCKET_NAME.to_string(),
-            s3_endpoint: example_values::PROFILES_S3_ENDPOINT.to_string(),
-            s3_region: example_values::PROFILES_S3_REGION.to_string(),
-            s3_accesskey: example_values::PROFILES_S3_ACCESSKEY.to_string(),
-            s3_secretaccesskey: example_values::PROFILES_S3_SECRETACCESSKEY.to_string(),
+        },
+        defaults: config::Defaults {
+            difficulty: example_values::DEFAULTS_DIFFICULTY,
+            resources: config::Resource {
+                cpu: example_values::DEFAULTS_RESOURCES_CPU,
+                memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
+            },
+        },
+        points: vec![config::ChallengePoints {
+            difficulty: example_values::POINTS_DIFFICULTY,
+            min: example_values::POINTS_MIN,
+            max: example_values::POINTS_MAX,
         }],
+
+        deploy: HashMap::from([(
+            example_values::PROFILES_PROFILE_NAME.to_string(),
+            config::ProfileDeploy {
+                challenges: HashMap::new(),
+            },
+        )]),
+        profiles: HashMap::from([]),
     }
 }
 
