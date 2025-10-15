@@ -8,11 +8,11 @@ pub static REGISTRY_BUILD_PASS: &str = "notrealcreds";
 pub static REGISTRY_CLUSTER_USER: &str = "cluster_user";
 pub static REGISTRY_CLUSTER_PASS: &str = "alsofake";
 
-pub static DEFAULTS_DIFFICULTY: i64 = 1;
+pub static DEFAULTS_DIFFICULTY: &str = "easy";
 pub static DEFAULTS_RESOURCES_CPU: i64 = 1;
 pub static DEFAULTS_RESOURCES_MEMORY: &str = "500M";
 
-pub static POINTS_DIFFICULTY: i64 = 1;
+pub static POINTS_DIFFICULTY: &str = "easy";
 pub static POINTS_MIN: i64 = 200;
 pub static POINTS_MAX: i64 = 500;
 

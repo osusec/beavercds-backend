@@ -288,7 +288,7 @@ pub fn blank_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            difficulty: 1,
+            difficulty: "easy".to_string(),
             resources: config::Resource {
                 cpu: 1,
                 memory: "".to_string(),
@@ -318,14 +318,14 @@ pub fn example_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            difficulty: example_values::DEFAULTS_DIFFICULTY,
+            difficulty: example_values::DEFAULTS_DIFFICULTY.to_string(),
             resources: config::Resource {
                 cpu: example_values::DEFAULTS_RESOURCES_CPU,
                 memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
             },
         },
         points: vec![config::ChallengePoints {
-            difficulty: example_values::POINTS_DIFFICULTY,
+            difficulty: example_values::POINTS_DIFFICULTY.to_string(),
             min: example_values::POINTS_MIN,
             max: example_values::POINTS_MAX,
         }],

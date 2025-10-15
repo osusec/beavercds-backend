@@ -121,7 +121,7 @@ struct Resource {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
 struct Defaults {
-    difficulty: i64,
+    difficulty: String,
     resources: Resource,
 }
 
@@ -145,10 +145,11 @@ struct ProfileConfig {
     dns: serde_yml::Value,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[fully_pub]
 struct ChallengePoints {
-    difficulty: i64,
+    /// Name of this difficulty level
+    difficulty: String,
     min: i64,
     max: i64,
 }
