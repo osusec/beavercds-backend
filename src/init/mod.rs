@@ -1,5 +1,6 @@
 use anyhow::Result;
 use inquire;
+use itertools::Itertools;
 use minijinja;
 use regex::Regex;
 use serde;
@@ -13,59 +14,13 @@ use crate::utils::render_strict;
 pub mod example_values;
 pub mod templates;
 
-#[derive(serde::Serialize, Default, Debug)]
-pub struct InitVars {
-    pub flag_regex: String,
-    pub registry_domain: String,
-    pub registry_build_user: String,
-    pub registry_build_pass: String,
-    pub registry_cluster_user: String,
-    pub registry_cluster_pass: String,
-    pub defaults_difficulty: String,
-    pub defaults_resources_cpu: String,
-    pub defaults_resources_memory: String,
-    pub points: Vec<InitPoints>,
-    pub profiles: Vec<InitProfile>,
-}
-
-#[derive(Clone, serde::Serialize, Default, Debug)]
-pub struct InitPoints {
-    pub difficulty: String,
-    pub min: String,
-    pub max: String,
-}
-
-impl fmt::Display for InitPoints {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "({}  Points: {}-{})",
-            self.difficulty, self.min, self.max
-        )
-    }
-}
-
-#[derive(serde::Serialize, Default, Debug)]
-pub struct InitProfile {
-    pub profile_name: String,
-    pub frontend_url: String,
-    pub frontend_token: String,
-    pub challenges_domain: String,
-    pub kubecontext: String,
-    pub s3_bucket_name: String,
-    pub s3_endpoint: String,
-    pub s3_region: String,
-    pub s3_accesskey: String,
-    pub s3_secretaccesskey: String,
-}
-
-pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
+pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
     println!("For all prompts below, simply press Enter to leave blank.");
     println!("All fields that can be set in rcds.yaml can also be set via environment variables.");
 
-    let points_ranks_reference: Vec<InitPoints>;
+    let difficulty_names; // set during `points` prompt later
 
-    let options = InitVars {
+    let options = config::RcdsConfig {
         flag_regex: {
             //TODO: what flavor of regex is being validated and accepted
             inquire::Text::new("Flag regex:")
@@ -74,44 +29,50 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             .prompt()?
         },
 
-        registry_domain: {
-            inquire::Text::new ("Container registry:")
+        registry: config::Registry {
+            domain: {
+                inquire::Text::new ("Container registry:")
             .with_help_message("Hosted challenges will be hosted in a container registry.The connection endpoint and the repository name.")
             .with_placeholder(example_values::REGISTRY_DOMAIN)
             .prompt()?
-        },
+            },
+            tag_format: "TODO".to_string(),
+            build: config::UserPass {
+                user: {
+                    inquire::Text::new("Container registry 'build' user:")
+                        .with_help_message(
+                            "The username that will be used to push built containers.",
+                        )
+                        .with_placeholder(example_values::REGISTRY_BUILD_USER)
+                        .prompt()?
+                },
+                // TODO: do we actually want to be in charge of these credentials vs expecting the local building utility already be logged in?
+                pass: {
+                    inquire::Password::new("Container registry 'build' password:")
+                        .with_help_message("The password to the 'build' user account") // TODO: could this support username:pat too?
+                        .with_display_mode(inquire::PasswordDisplayMode::Masked)
+                        .with_custom_confirmation_message("Enter again:")
+                        .prompt()?
+                },
+            },
+            cluster: config::UserPass {
+                user: {
+                    inquire::Text::new("Container registry 'cluster' user:")
+                    .with_help_message(
+                        "The username that the cluster will use to pull locally-built containers.",
+                    )
+                    .with_placeholder(example_values::REGISTRY_CLUSTER_USER)
+                    .prompt()?
+                },
 
-        registry_build_user: {
-            inquire::Text::new("Container registry 'build' user:")
-                .with_help_message("The username that will be used to push built containers.")
-                .with_placeholder(example_values::REGISTRY_BUILD_USER)
-                .prompt()?
-        },
-
-        // TODO: do we actually want to be in charge of these credentials vs expecting the local building utility already be logged in?
-        registry_build_pass: {
-            inquire::Password::new("Container registry 'build' password:")
-                .with_help_message("The password to the 'build' user account") // TODO: could this support username:pat too?
-                .with_display_mode(inquire::PasswordDisplayMode::Masked)
-                .with_custom_confirmation_message("Enter again:")
-                .prompt()?
-        },
-
-        registry_cluster_user: {
-            inquire::Text::new("Container registry 'cluster' user:")
-                .with_help_message(
-                    "The username that the cluster will use to pull locally-built containers.",
-                )
-                .with_placeholder(example_values::REGISTRY_CLUSTER_USER)
-                .prompt()?
-        },
-
-        registry_cluster_pass: {
-            inquire::Password::new("Container registry 'cluster' password:")
-                .with_help_message("The password to the 'cluster' user account")
-                .with_display_mode(inquire::PasswordDisplayMode::Masked)
-                .with_custom_confirmation_message("Enter again:")
-                .prompt()?
+                pass: {
+                    inquire::Password::new("Container registry 'cluster' password:")
+                        .with_help_message("The password to the 'cluster' user account")
+                        .with_display_mode(inquire::PasswordDisplayMode::Masked)
+                        .with_custom_confirmation_message("Enter again:")
+                        .prompt()?
+                },
+            },
         },
 
         points: {
@@ -119,72 +80,79 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             let mut again = inquire::Confirm::new("Do you want to provide a difficulty class?")
                 .with_default(false)
                 .prompt()?;
+
             println!("Challenge points are dynamic. For a static challenge, simply set minimum and maximum points to the same value.");
-            let mut points_ranks: Vec<InitPoints> = Vec::new();
+            let mut points = vec![];
             while again {
-                let points_obj = InitPoints {
-                    difficulty: {
+                let points_obj = config::ChallengePoints {
+                    difficulty:
                         inquire::Text::new("Difficulty class:")
                             .with_validator(inquire::required!("Please provide a name."))
                             .with_help_message("The name of the difficulty class.")
                             .with_placeholder(example_values::POINTS_DIFFICULTY)
                             .prompt()?
-                    },
-                    min: {
-                        inquire::CustomType::<u64>::new("Minimum points:")
+                    ,
+                    min:
+                        inquire::CustomType::<i64>::new("Minimum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The minimum number of points that challenges within this difficulty class are worth.")
-                        .with_placeholder(example_values::POINTS_MIN)
+                        .with_placeholder(&example_values::POINTS_MIN.to_string())
                         .prompt()?
-                        .to_string()
-                    },
+                    ,
                     max: {
-                        inquire::CustomType::<u64>::new("Maximum points:")
+                        inquire::CustomType::<i64>::new("Maximum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The maximum number of points that challenges within this difficulty class are worth.")
-                        .with_placeholder(example_values::POINTS_MAX)
+                        .with_placeholder(&example_values::POINTS_MAX.to_string())
                         .prompt()?
-                        .to_string()
                     },
                 };
-                points_ranks.push(points_obj);
+                points.push(points_obj);
 
                 again = inquire::Confirm::new("Do you want to provide another difficulty class?")
                     .with_default(false)
                     .prompt()?;
             }
-            points_ranks_reference = points_ranks.clone();
-            points_ranks
+            // save owned copy of difficulty category names for use below
+            difficulty_names = points.iter().map(|p| p.difficulty.clone()).collect_vec();
+            points
         },
+        defaults: config::Defaults {
+            difficulty: {
+                if difficulty_names.is_empty() {
+                    String::new()
+                } else {
+                    inquire::Select::new(
+                        "Please choose the default difficulty class:",
+                        difficulty_names,
+                    )
+                    .prompt()?
+                }
+            },
 
-        defaults_difficulty: {
-            if points_ranks_reference.is_empty() {
-                String::new()
-            } else {
-                inquire::Select::new(
-                    "Please choose the default difficulty class:",
-                    points_ranks_reference,
-                )
-                .prompt()?
-                .difficulty
-            }
-        },
 
-        defaults_resources_cpu:   inquire::Text::new("Default CPU limit:")
+            resources: config::Resource {
+                cpu:
+
+
+            inquire::CustomType::<i64>::new("Default CPU limit:")
             .with_help_message("The default limit of CPU resources per challenge pod.\nhttps://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes")
-            .with_placeholder(example_values::DEFAULTS_RESOURCES_CPU)
+            .with_placeholder(&example_values::DEFAULTS_RESOURCES_CPU.to_string())
             .with_default(example_values::DEFAULTS_RESOURCES_CPU)
-            .prompt()?
-        ,
+            .prompt()?,
 
-        defaults_resources_memory: {
+                memory: {
             inquire::Text::new("Default memory limit:")
             .with_help_message("The default limit of CPU resources per challenge pod.\nhttps://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes")
             .with_placeholder(example_values::DEFAULTS_RESOURCES_MEMORY)
             .with_default(example_values::DEFAULTS_RESOURCES_MEMORY)
             .prompt()?
 
+                },
+            },
         },
+
+
 
         profiles: {
             println!("You can define several environment profiles below.");
@@ -192,15 +160,17 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
             let mut again = inquire::Confirm::new("Do you want to provide a Profile?")
                 .with_default(false)
                 .prompt()?;
-            let mut profiles: Vec<InitProfile> = Vec::new();
+            let mut profiles = HashMap::new();
+
             while again {
-                let prof = InitProfile {
-                    profile_name: {
+                let name =  {
                         inquire::Text::new("Profile name:")
                         .with_help_message("The name of the deployment Profile. One Profile named \"default\" is recommended. You can add additional profiles.")
                         .with_placeholder(example_values::PROFILES_PROFILE_NAME)
                         .prompt()?
-                    },
+                };
+
+                let prof = config::ProfileConfig {
                     frontend_url: {
                         inquire::Text::new("Frontend URL:")
                             .with_help_message("The URL of the RNG scoreboard.")
@@ -225,45 +195,53 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
                         .with_placeholder(example_values::PROFILES_KUBECONTEXT)
                         .prompt()?
                     },
-                    s3_bucket_name: {
+                    s3: config::S3Config {
+                    bucket_name: {
                         inquire::Text::new("S3 bucket name:")
                         .with_help_message("Challenge artifacts and static files will be hosted on S3. The name of the S3 bucket.")
                         .with_placeholder(example_values::PROFILES_S3_BUCKET_NAME)
                         .prompt()?
                     },
-                    s3_endpoint: {
+                    endpoint: {
                         inquire::Text::new("S3 endpoint:")
                             .with_help_message("The endpoint of the S3 bucket server.")
                             .with_placeholder(example_values::PROFILES_S3_ENDPOINT)
                             .prompt()?
                     },
-                    s3_region: {
+                    region: {
                         inquire::Text::new("S3 region:")
                             .with_help_message("The region where the S3 bucket is hosted.")
                             .with_placeholder(example_values::PROFILES_S3_REGION)
                             .prompt()?
                     },
-                    s3_accesskey: {
+                    access_key: {
                         inquire::Text::new("S3 access key:")
                             .with_help_message("The public access key to the S3 bucket.")
                             .with_placeholder(example_values::PROFILES_S3_ACCESSKEY)
                             .prompt()?
                     },
-                    s3_secretaccesskey: {
+                    secret_key: {
                         inquire::Text::new("S3 secret key:")
                             .with_help_message("The secret acess key to the S3 bucket.")
                             .with_placeholder(example_values::PROFILES_S3_SECRETACCESSKEY)
                             .prompt()?
                     },
+                    },
+                    kubeconfig: None,
+                    dns: Default::default(), // explicitly leave this blank, user needs to set it
                 };
-                profiles.push(prof);
+
+                profiles.insert(name, prof);
 
                 again = inquire::Confirm::new("Do you want to provide another Profile?")
                     .with_default(false)
                     .prompt()?;
             }
             profiles
+
         },
+
+        deploy: HashMap::new() // user is init'ing a blank repo, no challenges yet!
     };
 
     Ok(options)
@@ -340,7 +318,7 @@ pub fn example_init() -> config::RcdsConfig {
     }
 }
 
-pub fn templatize_init(options: InitVars) -> Result<String> {
+pub fn templatize_init(options: config::RcdsConfig) -> Result<String> {
     debug!("rendering template with {options:?}");
     render_strict(templates::RCDS, minijinja::context! {options})
 }
