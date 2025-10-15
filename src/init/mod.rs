@@ -271,9 +271,32 @@ pub fn interactive_init() -> inquire::error::InquireResult<InitVars> {
 
 pub fn blank_init() -> config::RcdsConfig {
     trace!("building blank config");
+
+    // struct does not implement Default on purpose, manually fill out as blank
     config::RcdsConfig {
         flag_regex: "".to_string(),
-        ..Default::default()
+        registry: config::Registry {
+            domain: "".to_string(),
+            tag_format: String::new(),
+            build: config::UserPass {
+                user: "".to_string(),
+                pass: "".to_string(),
+            },
+            cluster: config::UserPass {
+                user: "".to_string(),
+                pass: "".to_string(),
+            },
+        },
+        defaults: config::Defaults {
+            difficulty: 1,
+            resources: config::Resource {
+                cpu: 1,
+                memory: "".to_string(),
+            },
+        },
+        points: vec![],
+        deploy: HashMap::from([]),
+        profiles: HashMap::from([]),
     }
 }
 
