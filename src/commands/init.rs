@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::Write;
 use std::process::exit;
-use tracing::error;
+use tracing::{error, warn};
 
 use crate::init;
 use crate::{access_handlers::frontend, commands::deploy};
@@ -22,8 +22,8 @@ pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
     f.write_all(configuration.as_bytes())?;
 
     // Note about external-dns
-    println!("Note: external-dns configuration settings will need to be provided in rcds.yaml after file creation, under the `profiles.name.dns` key.");
-    println!("Reference: https://github.com/bitnami/charts/tree/main/bitnami/external-dns");
+    warn!("Note: external-dns configuration settings will need to be provided in rcds.yaml after file creation, under the `profiles.name.dns` key.");
+    warn!("Reference: https://github.com/bitnami/charts/tree/main/bitnami/external-dns");
 
     Ok(())
 }
