@@ -318,7 +318,10 @@ pub fn example_init() -> config::RcdsConfig {
     }
 }
 
-pub fn templatize_init(options: config::RcdsConfig) -> Result<String> {
+pub fn templatize_init(options: &config::RcdsConfig) -> Result<String> {
     debug!("rendering template with {options:?}");
-    render_strict(templates::RCDS, minijinja::context! {options})
+    render_strict(
+        templates::RCDS,
+        minijinja::context! {.. minijinja::Value::from_serialize(options)},
+    )
 }

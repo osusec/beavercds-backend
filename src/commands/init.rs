@@ -16,7 +16,7 @@ pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
         init::example_init()
     };
 
-    let configuration = init::templatize_init(options).context("could not render template")?;
+    let configuration = init::templatize_init(&options).context("could not render template")?;
 
     let mut f = File::create("rcds.yaml")?;
     f.write_all(configuration.as_bytes())?;
