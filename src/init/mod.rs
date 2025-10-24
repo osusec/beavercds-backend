@@ -266,9 +266,9 @@ pub fn blank_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            difficulty: "easy".to_string(),
+            difficulty: "".to_string(),
             resources: config::Resource {
-                cpu: 1,
+                cpu: 0,
                 memory: "".to_string(),
             },
         },
@@ -285,7 +285,7 @@ pub fn example_init() -> config::RcdsConfig {
         flag_regex: example_values::FLAG_REGEX.to_string(),
         registry: config::Registry {
             domain: example_values::REGISTRY_DOMAIN.to_string(),
-            tag_format: String::new(),
+            tag_format: config::default_tag_format(),
             build: config::UserPass {
                 user: example_values::REGISTRY_BUILD_USER.to_string(),
                 pass: example_values::REGISTRY_BUILD_PASS.to_string(),

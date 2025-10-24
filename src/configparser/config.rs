@@ -100,7 +100,7 @@ struct Registry {
     /// Container registry login for pulling images in cluster. Can and should be read-only.
     cluster: UserPass,
 }
-fn default_tag_format() -> String {
+pub fn default_tag_format() -> String {
     "{{domain}}/{{challenge}}-{{container}}:{{profile}}".to_string()
 }
 
