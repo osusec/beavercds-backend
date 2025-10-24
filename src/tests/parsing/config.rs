@@ -111,7 +111,7 @@ fn all_yaml() {
                         access_key: "accesskey".to_string(),
                         secret_key: "secretkey".to_string(),
                     },
-                    dns: serde_yml::to_value(HashMap::from([
+                    dns: serde_yaml_ng::to_value(HashMap::from([
                         ("provider", "somebody"),
                         ("thing", "whatever"),
                     ]))
@@ -231,7 +231,7 @@ fn registry_tag_format() {
                         access_key: "accesskey".to_string(),
                         secret_key: "secretkey".to_string(),
                     },
-                    dns: serde_yml::to_value(HashMap::from([
+                    dns: serde_yaml_ng::to_value(HashMap::from([
                         ("provider", "somebody"),
                         ("thing", "whatever"),
                     ]))
