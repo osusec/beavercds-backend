@@ -90,6 +90,10 @@ fn dispatch(cli: cli::Cli) -> anyhow::Result<()> {
             commands::cluster_setup::run(profile)
         }
 
-        cli::Commands::Init { interactive, blank } => commands::init::run(interactive, blank),
+        cli::Commands::Init {
+            interactive,
+            placeholders,
+            blank,
+        } => commands::init::run(interactive, placeholders, blank),
     }
 }

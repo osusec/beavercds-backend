@@ -7,13 +7,14 @@ use tracing::{error, warn};
 use crate::init;
 use crate::{access_handlers::frontend, commands::deploy};
 
-pub fn run(interactive: &bool, blank: &bool) -> Result<()> {
-    let options = if *interactive {
-        init::interactive_init()?
-    } else if *blank {
+pub fn run(_interactive: &bool, placeholders: &bool, blank: &bool) -> Result<()> {
+    let options = if *blank {
         init::blank_init()
-    } else {
+    } else if *placeholders {
         init::example_init()
+    } else {
+        // default to interactive if no flags given
+        init::interactive_init()?
     };
 
     let configuration = init::templatize_init(&options).context("could not render template")?;

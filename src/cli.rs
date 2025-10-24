@@ -88,13 +88,20 @@ pub enum Commands {
         profile: String,
     },
 
-    /// Create an initial rcds.yaml to the current working directory.
+    /// Create an initial `rcds.yaml` to the current working directory.
+    ///
+    /// By default, this command will prompt for each field of the config file
+    /// interactively.
+    #[group(multiple = false)]
     Init {
-        /// Cannot be used with -b. If enabled, will prompt for each field of the config file. If disabled, behavior depends on --blank.
+        /// Prompt user for each field interactively. [Default if no flags specified]
         #[arg(short = 'i', long)]
         interactive: bool,
-        /// Cannot be used with -i. If enabled, will create the file without any fields set. If disabled, will create an example config file (fields set with fake data).
-        #[arg(short = 'b', long, conflicts_with = "interactive")]
+        /// Create a minimal config file with all fields blank.
+        #[arg(short = 'b', long)]
         blank: bool,
+        /// Create a config file with example placeholder values.
+        #[arg(short = 'p', long)]
+        placeholders: bool,
     },
 }
