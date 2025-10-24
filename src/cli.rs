@@ -96,4 +96,20 @@ pub enum Commands {
         #[arg(short = 'b', long, conflicts_with = "interactive")]
         blank: bool,
     },
+
+    /// Add a new challenge to the state, creating the respective configuration file in directory `./category/challenge_name/challenge.yaml`
+    Add {
+        /// The category that the challenge belongs to.
+        #[arg(index = 1, value_name = "CATEGORY")]
+        category: String,
+        /// The name of the challenge.
+        #[arg(index = 2, value_name = "NAME")]
+        name: String,
+        /// Cannot be used with -b. If enabled, will prompt for each field of the config file. If disabled, behavior depends on --blank.
+        #[arg(short = 'i', long)]
+        interactive: bool,
+        /// Cannot be used with -i. If enabled, will create the file without any fields set. If disabled, will create an example config file (fields set with fake data).
+        #[arg(short = 'b', long, conflicts_with = "interactive")]
+        blank: bool,
+    }
 }

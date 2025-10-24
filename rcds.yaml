@@ -1,0 +1,48 @@
+flag_regex: ctf{.*}
+
+registry:
+  domain: ghcr.io/youraccount
+  build:
+    user: admin
+    pass: notrealcreds
+  cluster:
+    user: cluster_user
+    pass: cluster_user
+
+defaults:
+  difficulty: 1
+  resources: { cpu: 1, memory: 500M }
+
+points: 
+  - difficulty: easy
+    min: 200
+    max: 500
+
+  - difficulty: 2
+    min: 1
+    max: 1337
+
+# TODO
+deploy:
+  # control challenge deployment status explicitly per environment/profile
+  testing:
+    misc/garf: true
+    pwn/notsh: true
+    web/bar: true
+
+profiles: 
+  default:
+    frontend_url: https://ctf.coolguy.invalid
+    frontend_token: secretsecretsecret
+    challenges_domain: chals.coolguy.invalid
+    kubecontext: ctf-cluster
+    s3:
+      bucket_name: ctf-bucket
+      endpoint: s3.coolguy.invalid
+      region: us-west-2
+      access_key: accesskey
+      secret_key: secretkey
+    dns:
+      # Place external-dns configuration options here;
+      #  this yaml will be passed directly to external-dns without modification
+      # Reference: https://github.com/bitnami/charts/tree/main/bitnami/external-dns

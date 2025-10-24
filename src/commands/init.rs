@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Write;
 use std::process::exit;
 
-use crate::init::{self as init, templatize_init};
+use crate::init;
 use crate::{access_handlers::frontend, commands::deploy};
 
 pub fn run(_interactive: &bool, _blank: &bool) {
@@ -23,7 +23,7 @@ pub fn run(_interactive: &bool, _blank: &bool) {
         options = init::example_init();
     }
 
-    let configuration = templatize_init(options);
+    let configuration = init::templatize_init(options);
     let mut f = match File::create("rcds.yaml") {
         Ok(t) => t,
         Err(e) => {

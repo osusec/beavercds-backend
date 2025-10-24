@@ -1,3 +1,4 @@
+pub mod add;
 pub mod build;
 pub mod check_access;
 pub mod cluster_setup;

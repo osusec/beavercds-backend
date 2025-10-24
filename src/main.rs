@@ -61,5 +61,7 @@ fn main() {
         }
 
         cli::Commands::Init { interactive, blank } => commands::init::run(interactive, blank),
+
+        cli::Commands::Add { name, category, interactive, blank } => commands::add::run(name, category, interactive, blank),
     }
 }
