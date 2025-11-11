@@ -20,12 +20,12 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
 
     let difficulty_names; // set during `points` prompt later
 
-    // FORMATTING NOTE: The with_help_message() calls cause rustfmt to silently
-    // fail to format this whole definition. Commenting out the marked
+    // FORMATTING NOTE: Some of these help messages cause rustfmt to silently
+    // fail to format this struct definition. Commenting out the marked
     // help_message lines temporarily will let the formatting work.
     //
-    // see issues:
-    // - https://github.com/rust-lang/rustfmt/issues/6687,
+    // Ref:
+    // - https://github.com/rust-lang/rustfmt/issues/6687
     // - https://github.com/rust-lang/rustfmt/issues/3863
 
     let options = config::RcdsConfig {
