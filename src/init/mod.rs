@@ -36,11 +36,14 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
             .prompt()?,
 
         registry: config::Registry {
+            tag_format: inquire::Text::new("Container image/tag format:")
+                .with_help_message("Template to use for built container images. This default works with most registries.") // too long to format
+                .with_placeholder(&config::default_tag_format())
+                .prompt()?,
             domain: inquire::Text::new("Container registry:")
-                .with_help_message("Hosted challenges will be hosted in a container registry.The connection endpoint and the repository name.") // too long to format
+                .with_help_message("Registry domain and repository name of the container registry for hosted challenge images.") // too long to format
                 .with_placeholder(example_values::REGISTRY_DOMAIN)
                 .prompt()?,
-            tag_format: "TODO".to_string(),
             build: config::UserPass {
                 user: inquire::Text::new("Container registry 'build' user:")
                     .with_help_message("The username that will be used to push built containers.")
