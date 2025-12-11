@@ -15,8 +15,9 @@ pub mod example_values;
 pub mod templates;
 
 pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
-    println!("For all prompts below, simply press Enter to leave blank.");
+    println!("For all prompts below, press Enter to leave blank.");
     println!("All fields that can be set in rcds.yaml can also be set via environment variables.");
+    println!("See the docs for more info on each field: https://beavercds.info/reference/rcds-yaml-reference.html");
 
     let difficulty_names; // set during `points` prompt later
 
