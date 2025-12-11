@@ -32,49 +32,51 @@ defaults:
 # challenges use dynamic scoring; for static points set both min and max to the
 # same value.
 points:
-  {% for pts in points -%}
+  {%- for pts in points %}
   - difficulty: "{{ pts.difficulty }}"
     min: {{ pts.min }}
     max: {{ pts.max }}
-  {%- else -%}
+  {%- else %}
   []
-  {% endfor %}
+  {%- endfor %}
 
 # Control what challenges are deployed in each environment profile.
 deploy:
-  {% for name, _conf in profiles | items -%}
+  {%- for name, _conf in profiles | items %}
   {{ name }}: {}
-  {%- else -%}
+  {%- else %}
   {}
-  {% endfor %}
+  {%- endfor %}
 
 # Separate environment profiles to allow for multiple independent deployments
 # of challenges, e.g. staging and production to test challenges internally
 # before going live for all users.
 profiles:
-  {% for name, p in profiles | items -%}
+  {%- for name, p in profiles | items %}
   {{ name }}:
     # Used to push challenge information into the frontend/scoreboard.
-    frontend_url: {{ p.frontend_url }}
-    frontend_token: {{ p.frontend_token }}
+    frontend_url: "{{ p.frontend_url }}"
+    frontend_token: "{{ p.frontend_token }}"
     # Root domain to expose all challenges under.
-    challenges_domain: {{ p.challenges_domain }}
-    # TODO: kubeconfig
-    kubecontext: {{ p.kubecontext }}
+    challenges_domain: "{{ p.challenges_domain }}"
+    # Kubernetes kubeconfig and context name of cluster for this profile.
+    {% if p.kubeconfig -%}
+    kubeconfig: "{{ p.kubeconfig }}"
+    {%- endif -%}
+    kubecontext: "{{ p.kubecontext }}"
     # Credentials for the public challenge file asset bucket.
     s3:
-      bucket_name: {{ p.s3.bucket_name }}
-      endpoint: {{ p.s3.endpoint }}
-      region: {{ p.s3.region }}
-      access_key: {{ p.s3.access_key }}
-      secret_key: {{ p.s3.secret_key }}
+      bucket_name: "{{ p.s3.bucket_name }}"
+      endpoint: "{{ p.s3.endpoint }}"
+      region: "{{ p.s3.region }}"
+      access_key: "{{ p.s3.access_key }}"
+      secret_key: "{{ p.s3.secret_key }}"
     # Config for the environment's external-dns deployment.
     dns:
       # Place external-dns configuration options here;
       # this yaml will be passed directly to external-dns without modification
       # Reference: https://github.com/bitnami/charts/tree/main/bitnami/external-dns
-  {%- else -%}
+  {%- else %}
   {}
-  {% endfor %}
-
+  {%- endfor %}
 {# comment to preserve trailing newline -#}

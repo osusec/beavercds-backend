@@ -3,7 +3,7 @@
 pub static FLAG_REGEX: &str = "ctf{.*}";
 
 pub static REGISTRY_DOMAIN: &str = "ghcr.io/youraccount";
-pub static REGISTRY_BUILD_USER: &str = "admin";
+pub static REGISTRY_BUILD_USER: &str = "build_user";
 pub static REGISTRY_BUILD_PASS: &str = "notrealcreds";
 pub static REGISTRY_CLUSTER_USER: &str = "cluster_user";
 pub static REGISTRY_CLUSTER_PASS: &str = "alsofake";
@@ -12,9 +12,12 @@ pub static DEFAULTS_DIFFICULTY: &str = "easy";
 pub static DEFAULTS_RESOURCES_CPU: i64 = 1;
 pub static DEFAULTS_RESOURCES_MEMORY: &str = "500M";
 
-pub static POINTS_DIFFICULTY: &str = "easy";
-pub static POINTS_MIN: i64 = 200;
-pub static POINTS_MAX: i64 = 500;
+pub static POINTS_EASY_DIFFICULTY: &str = "easy";
+pub static POINTS_EASY_MIN: i64 = 200;
+pub static POINTS_EASY_MAX: i64 = 500;
+pub static POINTS_HARD_DIFFICULTY: &str = "hard";
+pub static POINTS_HARD_MIN: i64 = 300;
+pub static POINTS_HARD_MAX: i64 = 600;
 
 pub static PROFILES_PROFILE_NAME: &str = "default";
 pub static PROFILES_FRONTEND_URL: &str = "https://ctf.coolguy.invalid";

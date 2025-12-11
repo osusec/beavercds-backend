@@ -4,11 +4,12 @@ use itertools::Itertools;
 use minijinja;
 use regex::Regex;
 use serde;
+use serde_yaml_ng::Value;
 use std::collections::HashMap;
 use std::fmt;
 use tracing::{debug, error, info, trace, warn};
 
-use crate::configparser::config;
+use crate::configparser::config::{self, ProfileConfig, S3Config};
 use crate::utils::render_strict;
 
 pub mod example_values;
@@ -85,17 +86,17 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                     difficulty: inquire::Text::new("Difficulty class:")
                         .with_validator(inquire::required!("Please provide a name."))
                         .with_help_message("The name of the difficulty class.")
-                        .with_placeholder(example_values::POINTS_DIFFICULTY)
+                        .with_placeholder(example_values::POINTS_EASY_DIFFICULTY)
                         .prompt()?,
                     min: inquire::CustomType::<i64>::new("Minimum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The minimum number of points that challenges within this difficulty class are worth.") // too long to format
-                        .with_default(example_values::POINTS_MIN)
+                        .with_default(example_values::POINTS_EASY_MIN)
                         .prompt()?,
                     max: inquire::CustomType::<i64>::new("Maximum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The maximum number of points that challenges within this difficulty class are worth.") // too long to format
-                        .with_default(example_values::POINTS_MAX)
+                        .with_default(example_values::POINTS_EASY_MAX)
                         .prompt()?,
                 };
                 points.push(points_obj);
@@ -265,11 +266,18 @@ pub fn example_init() -> config::RcdsConfig {
                 memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
             },
         },
-        points: vec![config::ChallengePoints {
-            difficulty: example_values::POINTS_DIFFICULTY.to_string(),
-            min: example_values::POINTS_MIN,
-            max: example_values::POINTS_MAX,
-        }],
+        points: vec![
+            config::ChallengePoints {
+                difficulty: example_values::POINTS_EASY_DIFFICULTY.to_string(),
+                min: example_values::POINTS_EASY_MIN,
+                max: example_values::POINTS_EASY_MAX,
+            },
+            config::ChallengePoints {
+                difficulty: example_values::POINTS_HARD_DIFFICULTY.to_string(),
+                min: example_values::POINTS_HARD_MIN,
+                max: example_values::POINTS_HARD_MAX,
+            },
+        ],
 
         deploy: HashMap::from([(
             example_values::PROFILES_PROFILE_NAME.to_string(),
@@ -277,7 +285,25 @@ pub fn example_init() -> config::RcdsConfig {
                 challenges: HashMap::new(),
             },
         )]),
-        profiles: HashMap::from([]),
+
+        profiles: HashMap::from([(
+            example_values::PROFILES_PROFILE_NAME.to_string(),
+            ProfileConfig {
+                frontend_url: example_values::PROFILES_FRONTEND_URL.to_string(),
+                frontend_token: example_values::PROFILES_FRONTEND_TOKEN.to_string(),
+                challenges_domain: example_values::PROFILES_CHALLENGES_DOMAIN.to_string(),
+                kubeconfig: None,
+                kubecontext: example_values::PROFILES_KUBECONTEXT.to_string(),
+                s3: S3Config {
+                    bucket_name: example_values::PROFILES_S3_BUCKET_NAME.to_string(),
+                    endpoint: example_values::PROFILES_S3_ENDPOINT.to_string(),
+                    region: example_values::PROFILES_S3_REGION.to_string(),
+                    access_key: example_values::PROFILES_S3_ACCESSKEY.to_string(),
+                    secret_key: example_values::PROFILES_S3_SECRETACCESSKEY.to_string(),
+                },
+                dns: Value::Null,
+            },
+        )]),
     }
 }
 
