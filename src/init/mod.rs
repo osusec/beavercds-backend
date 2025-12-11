@@ -52,7 +52,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                     .prompt()?,
                 // TODO: do we actually want to be in charge of these credentials vs expecting the local building utility already be logged in?
                 pass: inquire::Password::new("Container registry 'build' password:")
-                    .with_help_message("The password to the 'build' user account") // TODO: could this support username:pat too?
+                    .with_help_message("The password to the 'build' user account.") // TODO: could this support username:pat too?
                     .with_display_mode(inquire::PasswordDisplayMode::Masked)
                     .with_custom_confirmation_message("Enter again:")
                     .prompt()?,
@@ -65,7 +65,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                     .with_placeholder(example_values::REGISTRY_CLUSTER_USER)
                     .prompt()?,
                 pass: inquire::Password::new("Container registry 'cluster' password:")
-                    .with_help_message("The password to the 'cluster' user account")
+                    .with_help_message("The password to the 'cluster' user account.")
                     .with_display_mode(inquire::PasswordDisplayMode::Masked)
                     .with_custom_confirmation_message("Enter again:")
                     .prompt()?,
@@ -77,7 +77,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
             let mut again = inquire::Confirm::new("Do you want to provide a difficulty class?")
                 .with_default(false)
                 .prompt()?;
-            //
+
             println!("Challenge points are dynamic. For a static challenge, simply set minimum and maximum points to the same value.");
             let mut points = vec![];
             while again {
