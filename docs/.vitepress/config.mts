@@ -7,36 +7,10 @@ export default defineConfig({
   description: "Next-generation CTF deployment framework",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    nav: [
-      { text: "Setup", link: "guides/infra-quickstart" },
-      {
-        text: "Guides",
-        items: [
-          { text: "Deployment Quickstart", link: "for-sysadmins/quickstart" },
-          { text: "Add new challenge", link: "for-authors/quickstart" },
-        ],
-      },
-
-      {
-        text: "Infrastructure Setup",
-        items: [
-          { text: "Quickstart", link: "/for-sysadmins/quickstart" },
-          { text: "Install", link: "/for-sysadmins/install" },
-          { text: "Config Reference", link: "/for-sysadmins/config" },
-          { text: "Architecture", link: "/for-sysadmins/architecture" },
-        ],
-      },
-      {
-        text: "Challenge Authors",
-        items: [
-          { text: "Challenge Quickstart", link: "/for-authors/quickstart" },
-          {
-            text: "Challenge Config Reference",
-            link: "/for-authors/challenge-config",
-          },
-        ],
-      },
-    ],
+    //
+    // Headerbar nav links. Trying to keep this to only a couple top-level
+    // categories, since the sidebar has the full list of pages.
+    nav: [],
 
     // auto generate sidebar from directory structure, via vitepress-sidebar
     sidebar: generateSidebar({
