@@ -1,3 +1,2 @@
 [tools]
 node = "lts"
-"npm:corepack" = "latest"
