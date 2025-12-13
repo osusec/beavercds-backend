@@ -1,2 +1,6 @@
 [tools]
 node = "lts"
+
+[env]
+# install corepack shims with node
+MISE_NODE_COREPACK = true
