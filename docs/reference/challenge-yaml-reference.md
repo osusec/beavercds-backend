@@ -90,8 +90,8 @@ This is automatically set from the expected directory structure of `<category>/<
 - type: `integer`
 - no default
 
-::: info
-Not implemented yet, does nothing
+::: error
+Not implemented yet, does nothing. Requires upcoming scoreboard integration.
 :::
 
 The difficulty from the challenge, used to set point values. Values correspond to entries in the [rcds.yaml difficulty settings](rcds-yaml-reference#difficulty).
