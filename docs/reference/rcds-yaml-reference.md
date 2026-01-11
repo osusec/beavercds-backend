@@ -54,16 +54,18 @@ Examples: `docker.io/yourorg`, `ghcr.io/examplesec`
 
 Specifies the container image and tag that challenge containers will be built
 as. This is used as a template with the challenge information to produce the
-final container image and tag for each challenge. Almost all registries work
-with the default format string.
+final container image and tag for each challenge. 
 
-Default, works for most registries (Docker, GHCR, DigitalOcean, self-hosted, ...):
-- `"{{domain}}/{{challenge}}-{{container}}:{{profile}}"`
+- Default, works for almost all registries (Docker, GHCR, DigitalOcean,
+  self-hosted, ...):
+  
+  `"{{domain}}/{{challenge}}-{{container}}:{{profile}}"`
 
-For registries like AWS ECR that require all image registries to be precreated
-ahead-of-time, this keeps all the challenge info in the tag so only one ECR
-registry needs to be created:
-- `"{{domain}}:{{challenge}}-{{container}}-{{profile}}"`
+- For registries like AWS ECR that require all image registries to be precreated
+  ahead-of-time, this keeps all the challenge info in the tag so only one ECR
+  registry needs to be created:
+  
+  `"{{domain}}:{{challenge}}-{{container}}-{{profile}}"`
 
 Format: Jinja-style double-braces around field name (`{{ field_name }}`)
 
@@ -78,7 +80,7 @@ If setting a custom format, you must use all four of these fields in order for c
 
 Example:
 
-For challenge `pwn/notsh`, chal pod container `main`, profile `prod`, and domain `registry.io/myctf`:
+For challenge `pwn/notsh`, chal pod container `main`, and profile `prod`:
 
 ```yaml
 registry:
@@ -96,7 +98,8 @@ registry:
 
 ### `build`
 
-Registry credentials that will be used locally to push up challenge container images. This must have push permissions. 
+Registry credentials that will be used locally to push up challenge container
+images. This must have push permissions. 
 
 Format: `{ user: "registry-username", pass: "registry-password" }`
 
@@ -109,7 +112,9 @@ registry:
 
 ### `cluster`
 
-Registry credentials that will be used in the Kubernetes cluster to pull the challenge container images. This must have pull permissions, but does not need push. 
+Registry credentials that will be used in the Kubernetes cluster to pull the
+challenge container images. This must have pull permissions, but does not need
+push. 
 
 Format: `{ user: "registry-username", pass: "registry-password" }`
 
@@ -120,18 +125,70 @@ registry:
     pass: stillnotreal
 ```
 
-## `defaults`
+## `points`
+
+Defines the available difficulty classes for challenges. This allows challenges
+to be worth different points, e.g. for harder challenges or a survey with
+minimal points.
+
+```yaml
+points:
+  - difficulty: "normal"
+    max: 500
+    min: 100
+  - difficulty: "hard"
+    max: 600
+    min: 200
+  - difficulty: "survey"
+    max: 1
+    min: 1
+```
 
 ### `difficulty`
 
+::: info
+Not implemented yet, does nothing. Requires upcoming scoreboard integration.
+:::
+
+Name of this difficulty class. Challenges will use this name to set their
+difficulty class via the [`difficulty` field in their
+`challenge.yaml`](./challenge-yaml-reference.md#difficulty).
+
+### max, min
+
+Maximum and minimum points that challenges with this difficulty will be scored
+as. Points are done via dynamic scoring; challenges start at max points and as
+more people solve a challenge it approaches the minimum.
+
+## `defaults`
+
+These set the default difficulty class and cluster resource requests for
+challenges that do not have them set in their `challenge.yaml`.
+
+```yaml
+defaults:
+  difficulty: easy
+  resources: { cpu: 1, memory: 500Mi }
+```
+
+### `difficulty`
+
+Default difficulty class name to use for challenges that do not explicitly set
+one.
+
 ### `resources`
 
-
-## `points`
-
+Default resource request/limits to use for challenges that do not explicitly set
+one.
 
 ## `deploy`
 
+Controls what challenges are enabled for each environment. 
+
+::: warn
+Currently any challenges that have been previously enabled and deployed will 
+*not* be un-deployed if they are disabled here.
+:::
 
 ## `profiles`
 
