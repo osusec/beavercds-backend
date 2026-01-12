@@ -103,5 +103,8 @@ pub enum Commands {
         /// Create a config file with example placeholder values.
         #[arg(short = 'p', long)]
         placeholders: bool,
+        /// Force overwrite any existing rcds config file
+        #[arg(short = 'f', long)]
+        force: bool,
     },
 }

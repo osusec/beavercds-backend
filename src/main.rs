@@ -94,6 +94,7 @@ fn dispatch(cli: cli::Cli) -> anyhow::Result<()> {
             interactive,
             placeholders,
             blank,
-        } => commands::init::run(interactive, placeholders, blank),
+            force,
+        } => commands::init::run(interactive, placeholders, blank, force),
     }
 }
