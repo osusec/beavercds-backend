@@ -19,12 +19,7 @@ flag_regex: ""
 # Registry configuration for challenge images.
 registry:
   domain: ""
-  # This is the default tag format; it will create a separate image for each
-  # challenge pod. Most container registries (Docker, GHCR, Gitlab, Quay, ...)
-  # are fine with this. If you are using a container registry that requires
-  # every image within the repository to be created ahead-of-time (AWS ECR)
-  # before it can be pushed, you can change this to use tags for each separate
-  # challenge within one image in the registry.
+  # Format template to customize the final container image tag.
   tag_format: ""
   # Build-time credentials used to push images during `beavercds deploy`.
   build:
@@ -77,12 +72,7 @@ flag_regex: "ctf{.*}"
 # Registry configuration for challenge images.
 registry:
   domain: "ghcr.io/youraccount"
-  # This is the default tag format; it will create a separate image for each
-  # challenge pod. Most container registries (Docker, GHCR, Gitlab, Quay, ...)
-  # are fine with this. If you are using a container registry that requires
-  # every image within the repository to be created ahead-of-time (AWS ECR)
-  # before it can be pushed, you can change this to use tags for each separate
-  # challenge within one image in the registry.
+  # Format template to customize the final container image tag.
   tag_format: "{{domain}}/{{challenge}}-{{container}}:{{profile}}"
   # Build-time credentials used to push images during `beavercds deploy`.
   build:
