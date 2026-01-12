@@ -11,7 +11,7 @@ pub fn run(_interactive: &bool, placeholders: &bool, blank: &bool) -> Result<()>
     let options = if *blank {
         init::blank_init()
     } else if *placeholders {
-        init::example_init()
+        init::placeholder_init()
     } else {
         // default to interactive if no flags given
         init::interactive_init()?

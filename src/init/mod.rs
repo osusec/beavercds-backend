@@ -242,8 +242,8 @@ pub fn blank_init() -> config::RcdsConfig {
     }
 }
 
-pub fn example_init() -> config::RcdsConfig {
-    trace!("building example values config");
+pub fn placeholder_init() -> config::RcdsConfig {
+    trace!("building placeholder values config");
 
     config::RcdsConfig {
         flag_regex: example_values::FLAG_REGEX.to_string(),
