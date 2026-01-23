@@ -9,13 +9,15 @@ clap = { version = "4.5.4", features = ["unicode", "env", "derive"] }
 itertools = "0.12.1"
 glob = "0.3.1"
 serde = { version = "1.0", features = ["derive"] }
-serde_yml = "0.0.12"
+serde_yaml_ng = "0.10.0"
 serde_nested_with = "0.2.5"
 fully_pub = "0.1.4"
 void = "1"
 futures = "0.3.30"
 figment = { version = "0.10.19", features = ["env", "yaml", "test"] }
 zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
+regex = "1.11.1"
+inquire = "0.7.5"
 
 # tracing
 tracing = { version = "0.1.41", features = ["attributes"] }

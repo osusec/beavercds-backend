@@ -16,7 +16,7 @@ use kube::{Api, ResourceExt};
 use minijinja;
 use owo_colors::OwoColorize;
 use serde;
-use serde_yml;
+use serde_yaml_ng;
 use tempfile;
 use tracing::{debug, error, info, trace, warn};
 
@@ -95,7 +95,7 @@ pub async fn install_extdns(profile: &config::ProfileConfig) -> Result<()> {
     let values = render_strict(
         VALUES_TEMPLATE,
         minijinja::context! {
-            provider_credentials => serde_yml::to_string(&profile.dns)?,
+            provider_credentials => serde_yaml_ng::to_string(&profile.dns)?,
             chal_domain => profile.challenges_domain
         },
     )?;

@@ -12,12 +12,12 @@ registry:
     pass: alsofake
 
 defaults:
-  difficulty: 1
+  difficulty: "standard"
   resources: { cpu: 1, memory: 500M }
 
 points:
-  - difficulty: 1
-    min: 0
+  - difficulty: "standard"
+    min: 100
     max: 1337
 
 deploy:

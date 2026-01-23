@@ -27,11 +27,11 @@ fn all_yaml() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: 1
+                    difficulty: "easy"
                     resources: { cpu: 1, memory: 500M }
 
                 points:
-                  - difficulty: 1
+                  - difficulty: "easy"
                     min: 0
                     max: 1337
 
@@ -58,11 +58,7 @@ fn all_yaml() {
             "#,
         )?;
 
-        let config = match parse() {
-            Ok(c) => Ok(c),
-            // figment::Error cannot coerce from anyhow::Error natively
-            Err(e) => Err(figment::Error::from(format!("{:?}", e))),
-        }?;
+        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
 
         let expected = RcdsConfig {
             flag_regex: "test{[a-zA-Z_]+}".to_string(),
@@ -79,14 +75,14 @@ fn all_yaml() {
                 },
             },
             defaults: Defaults {
-                difficulty: 1,
+                difficulty: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
             points: vec![ChallengePoints {
-                difficulty: 1,
+                difficulty: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],
@@ -115,7 +111,7 @@ fn all_yaml() {
                         access_key: "accesskey".to_string(),
                         secret_key: "secretkey".to_string(),
                     },
-                    dns: serde_yml::to_value(HashMap::from([
+                    dns: serde_yaml_ng::to_value(HashMap::from([
                         ("provider", "somebody"),
                         ("thing", "whatever"),
                     ]))
@@ -151,11 +147,11 @@ fn registry_tag_format() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: 1
+                    difficulty: "easy"
                     resources: { cpu: 1, memory: 500M }
 
                 points:
-                  - difficulty: 1
+                  - difficulty: "easy"
                     min: 0
                     max: 1337
 
@@ -182,11 +178,7 @@ fn registry_tag_format() {
             "#,
         )?;
 
-        let config = match parse() {
-            Ok(c) => Ok(c),
-            // figment::Error cannot coerce from anyhow::Error natively
-            Err(e) => Err(figment::Error::from(format!("{:?}", e))),
-        }?;
+        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
 
         let expected = RcdsConfig {
             flag_regex: "test{[a-zA-Z_]+}".to_string(),
@@ -203,14 +195,14 @@ fn registry_tag_format() {
                 },
             },
             defaults: Defaults {
-                difficulty: 1,
+                difficulty: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
             points: vec![ChallengePoints {
-                difficulty: 1,
+                difficulty: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],
@@ -239,7 +231,7 @@ fn registry_tag_format() {
                         access_key: "accesskey".to_string(),
                         secret_key: "secretkey".to_string(),
                     },
-                    dns: serde_yml::to_value(HashMap::from([
+                    dns: serde_yaml_ng::to_value(HashMap::from([
                         ("provider", "somebody"),
                         ("thing", "whatever"),
                     ]))
@@ -274,11 +266,11 @@ fn yaml_with_env_overrides() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: 1
+                    difficulty: "easy"
                     resources: { cpu: 1, memory: 500M }
 
                 points:
-                  - difficulty: 1
+                  - difficulty: "easy"
                     min: 0
                     max: 1337
 
@@ -315,10 +307,7 @@ fn yaml_with_env_overrides() {
         jail.set_env("BEAVERCDS_PROFILES_TESTING_S3_ACCESS_KEY", "envkey");
         jail.set_env("BEAVERCDS_PROFILES_TESTING_S3_SECRET_KEY", "envsecret");
 
-        let config = match parse() {
-            Err(e) => Err(figment::Error::from(format!("{:?}", e))),
-            Ok(config) => Ok(config),
-        }?;
+        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
 
         // also check that the envvar overrides were applied
         assert_eq!(config.registry.build.user, "envbuilduser");
@@ -350,11 +339,11 @@ fn partial_yaml_with_env() {
                     domain: registry.example/test
 
                 defaults:
-                    difficulty: 1
+                    difficulty: "easy"
                     resources: { cpu: 1, memory: 500M }
 
                 points:
-                  - difficulty: 1
+                  - difficulty: "easy"
                     min: 0
                     max: 1337
 
@@ -388,10 +377,7 @@ fn partial_yaml_with_env() {
         jail.set_env("BEAVERCDS_PROFILES_TESTING_S3_ACCESS_KEY", "envkey");
         jail.set_env("BEAVERCDS_PROFILES_TESTING_S3_SECRET_KEY", "envsecret");
 
-        let config = match parse() {
-            Err(e) => Err(figment::Error::from(format!("{:?}", e))),
-            Ok(config) => Ok(config),
-        }?;
+        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
 
         // also check that the envvar overrides were applied
         assert_eq!(config.registry.build.user, "envbuilduser");
@@ -449,11 +435,11 @@ fn bad_yaml_missing_secrets() {
                     domain: registry.example/test
 
                 defaults:
-                    difficulty: 1
+                    difficulty: "easy"
                     resources: { cpu: 1, memory: 500M }
 
                 points:
-                  - difficulty: 1
+                  - difficulty: "easy"
                     min: 0
                     max: 1337
 

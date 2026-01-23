@@ -1,0 +1,77 @@
+# Used to check that all challenges' flags are in the correct format,
+# and by the scoreboard frontend as a first check for invalid submissions.
+flag_regex: "{{ flag_regex }}"
+
+# Registry configuration for challenge images.
+registry:
+  domain: "{{ registry.domain }}"
+  # Format template to customize the final container image tag.
+  tag_format: "{{ registry.tag_format }}"
+  # Build-time credentials used to push images during `beavercds deploy`.
+  build:
+    user: "{{ registry.build.user }}"
+    pass: "{{ registry.build.pass }}"
+  # Used by the cluster to pull the built images.
+  cluster:
+    user: "{{ registry.cluster.user }}"
+    pass: "{{ registry.cluster.pass }}"
+
+# Default difficulty class and resource requests used for challenges that did
+# not set their own.
+defaults:
+  difficulty: "{{ defaults.difficulty }}"
+  resources: { cpu: {{ defaults.resources.cpu }}, memory: "{{ defaults.resources.memory }}" }
+
+# The list of different difficulties that challenges can be assigned, and how
+# many points challenges of that difficulty class should be worth. All
+# challenges use dynamic scoring; for static points set both min and max to the
+# same value.
+points:
+  {%- for pts in points %}
+  - difficulty: "{{ pts.difficulty }}"
+    min: {{ pts.min }}
+    max: {{ pts.max }}
+  {%- else %}
+  []
+  {%- endfor %}
+
+# Control what challenges are deployed in each environment profile.
+deploy:
+  {%- for name, _conf in profiles | items %}
+  {{ name }}: {}
+  {%- else %}
+  {}
+  {%- endfor %}
+
+# Separate environment profiles to allow for multiple independent deployments
+# of challenges, e.g. staging and production to test challenges internally
+# before going live for all users.
+profiles:
+  {%- for name, p in profiles | items %}
+  {{ name }}:
+    # Used to push challenge information into the frontend/scoreboard.
+    frontend_url: "{{ p.frontend_url }}"
+    frontend_token: "{{ p.frontend_token }}"
+    # Root domain to expose all challenges under.
+    challenges_domain: "{{ p.challenges_domain }}"
+    # Kubernetes kubeconfig and context name of cluster for this profile.
+    {% if p.kubeconfig -%}
+    kubeconfig: "{{ p.kubeconfig }}"
+    {%- endif -%}
+    kubecontext: "{{ p.kubecontext }}"
+    # Credentials for the public challenge file asset bucket.
+    s3:
+      bucket_name: "{{ p.s3.bucket_name }}"
+      endpoint: "{{ p.s3.endpoint }}"
+      region: "{{ p.s3.region }}"
+      access_key: "{{ p.s3.access_key }}"
+      secret_key: "{{ p.s3.secret_key }}"
+    # Config for the environment's external-dns deployment.
+    dns:
+      # Place external-dns configuration options here;
+      # this yaml will be passed directly to external-dns without modification
+      # Reference: https://github.com/bitnami/charts/tree/main/bitnami/external-dns
+  {%- else %}
+  {}
+  {%- endfor %}
+{# comment to preserve trailing newline -#}

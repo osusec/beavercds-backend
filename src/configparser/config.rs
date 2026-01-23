@@ -100,7 +100,7 @@ struct Registry {
     /// Container registry login for pulling images in cluster. Can and should be read-only.
     cluster: UserPass,
 }
-fn default_tag_format() -> String {
+pub fn default_tag_format() -> String {
     "{{domain}}/{{challenge}}-{{container}}:{{profile}}".to_string()
 }
 
@@ -121,7 +121,7 @@ struct Resource {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
 struct Defaults {
-    difficulty: i64,
+    difficulty: String,
     resources: Resource,
 }
 
@@ -142,13 +142,14 @@ struct ProfileConfig {
     kubeconfig: Option<String>,
     kubecontext: String,
     s3: S3Config,
-    dns: serde_yml::Value,
+    dns: serde_yaml_ng::Value,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 #[fully_pub]
 struct ChallengePoints {
-    difficulty: i64,
+    /// Name of this difficulty level
+    difficulty: String,
     min: i64,
     max: i64,
 }

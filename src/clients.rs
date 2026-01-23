@@ -303,7 +303,7 @@ pub async fn apply_manifest_yaml(
 
     // this manifest has multiple documents (crds, deployment)
     for yaml in multidoc_deserialize(manifest)? {
-        let obj: DynamicObject = serde_yml::from_value(yaml)?;
+        let obj: DynamicObject = serde_yaml_ng::from_value(yaml)?;
         trace!(
             "applying resource {} {}",
             obj.types.clone().unwrap_or_default().kind,
@@ -334,14 +334,14 @@ pub async fn apply_manifest_yaml(
 }
 
 /// Deserialize multi-document yaml string into a Vec of the documents
-fn multidoc_deserialize(data: &str) -> Result<Vec<serde_yml::Value>> {
+fn multidoc_deserialize(data: &str) -> Result<Vec<serde_yaml_ng::Value>> {
     use serde::Deserialize;
 
     let mut docs = vec![];
-    for de in serde_yml::Deserializer::from_str(data) {
-        match serde_yml::Value::deserialize(de)? {
+    for de in serde_yaml_ng::Deserializer::from_str(data) {
+        match serde_yaml_ng::Value::deserialize(de)? {
             // discard any empty documents (e.g. from trailing ---)
-            serde_yml::Value::Null => (),
+            serde_yaml_ng::Value::Null => (),
             not_null => docs.push(not_null),
         };
     }

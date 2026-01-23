@@ -87,4 +87,24 @@ pub enum Commands {
         #[arg(short, long, value_name = "PROFILE")]
         profile: String,
     },
+
+    /// Create an initial `rcds.yaml` to the current working directory.
+    ///
+    /// By default, this command will prompt for each field of the config file
+    /// interactively.
+    #[group(multiple = false)]
+    Init {
+        /// Prompt user for each field interactively. [Default if no flags specified]
+        #[arg(short = 'i', long)]
+        interactive: bool,
+        /// Create a minimal config file with all fields blank.
+        #[arg(short = 'b', long)]
+        blank: bool,
+        /// Create a config file with example placeholder values.
+        #[arg(short = 'p', long)]
+        placeholders: bool,
+        /// Force overwrite any existing rcds config file
+        #[arg(short = 'f', long)]
+        force: bool,
+    },
 }
