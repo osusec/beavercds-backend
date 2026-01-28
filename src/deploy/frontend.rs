@@ -4,7 +4,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, bail, Context, Error, Ok, Result};
 use itertools::Itertools;
+use serde::Serialize;
 use tracing::{debug, error, info, trace, warn};
+use ureq;
 
 use crate::builder::BuildResult;
 use crate::configparser::challenge::{ExposeType, FlagType};
@@ -15,21 +17,45 @@ use crate::utils::render_strict;
 use super::kubernetes::KubeDeployResult;
 use super::s3::S3DeployResult;
 
+#[derive(Debug, Serialize)]
+pub struct FrontendChalData {
+    id: String,
+    name: String,
+    author: String,
+    category: String,
+    description: String,
+    min_points: u32,
+    max_points: u32,
+    flag: String,
+    files: Vec<String>,
+}
+
+/// Post collected challenge info structs to frontend
+pub async fn update_frontend(profile_name: &str, chal_infos: &[FrontendChalData]) -> Result<()> {
+    let profile = get_profile_config(profile_name)?;
+
+    // Post collected challenge info to frontend
+    let resp = ureq::post(format!("{}/chals/resolvestate", profile.frontend_url))
+        .header("Authorization", format!("Token {}", profile.frontend_token))
+        .send_json(chal_infos)
+        .context("could not update frontend with challenge info")?;
+    // let json = resp.body().read_json()?;
+
+    Ok(())
+}
+
 /// Sync deployed challenges with rCTF frontend
-pub async fn update_frontend(
+pub async fn render_frontend_info(
     profile_name: &str,
     chal: &ChallengeConfig,
     build_result: &BuildResult,
     kube_result: &KubeDeployResult,
     s3_result: &S3DeployResult,
-) -> Result<String> {
+) -> Result<FrontendChalData> {
     let profile = get_profile_config(profile_name)?;
     let enabled_challenges = enabled_challenges(profile_name)?;
 
-    // TODO: hook this up to real frontend! Waiting on rCTF frontend reimplementation
-
-    // for now, render out all challenge information to a markdown file for
-    // admins to enter manually
+    // collect and render challenge info
 
     let hostname = chal_domain(chal, &profile.challenges_domain);
     let rendered_desc = render_strict(
@@ -45,21 +71,6 @@ pub async fn update_frontend(
         },
     )?;
 
-    // urls to markdown links
-    let asset_urls = s3_result
-        .uploaded_asset_urls
-        .iter()
-        .map(|url| {
-            format!(
-                "[{}]({})",
-                Path::new(url)
-                    .file_name()
-                    .expect("asset URL has no path!")
-                    .to_string_lossy(),
-                url
-            )
-        })
-        .join("\n\n");
     let flag = match &chal.flag {
         FlagType::RawString(f) => f.clone(),
         FlagType::File { file } => {
@@ -76,46 +87,23 @@ pub async fn update_frontend(
             flag
         }
         FlagType::Text { text } => text.clone(),
-        FlagType::Regex { regex } => unimplemented!(),
-        FlagType::Verifier { verifier } => unimplemented!(),
+        FlagType::Regex { regex } => unimplemented!("flag regex not implemented"),
+        FlagType::Verifier { verifier } => unimplemented!("flag custom verifier not implemented"),
     };
 
-    let info_md = format!(
-        r"
-##  `{slug}`
+    let chal_data = FrontendChalData {
+        id: chal.slugify_slash(),
+        name: chal.name.to_string(),
+        author: chal.author.to_string(),
+        category: chal.category.to_string(),
+        description: rendered_desc,
+        min_points: 0, // TODO! lookup
+        max_points: 0, // TODO! lookup
+        flag,
+        files: s3_result.uploaded_asset_urls.clone(),
+    };
 
-|        |   |
---------:|---|
-name     | `{name}`
-category | `{cat}`
-author   | `{author}`
-
-### description
-
-```
-{desc}
-
-{asset_urls}
-```
-
-### flag
-
-`{flag}`
-
----
-",
-        slug = chal.slugify_slash(),
-        name = chal.name,
-        cat = chal.category,
-        author = chal.author,
-        desc = rendered_desc,
-        asset_urls = asset_urls,
-        flag = flag.trim(),
-    );
-
-    // TODO: proper frontend updates
-
-    Ok(info_md)
+    Ok(chal_data)
 }
 
 // TODO: move to impl ChallengeConfig?
