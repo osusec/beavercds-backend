@@ -119,20 +119,12 @@ pub async fn deploy_challenges(
 ) -> Result<Vec<()>> {
     let profile = get_profile_config(profile_name)?;
 
-    let mut md_file = File::create(format!("challenge-info-{profile_name}.md"))?;
-    md_file.write_all(b"# Challenge Information\n\n")?;
-    let md_lock = std::sync::Mutex::new(md_file);
-
     build_results
         .iter()
         .map(|(chal, build)| async {
             let chal_md = deploy_single_challenge(profile_name, chal, build)
                 .await
                 .with_context(|| format!("could not deploy challenge {:?}", chal.directory))?;
-
-            debug!("writing chal {:?} info to file", chal.directory);
-            md_lock.lock().unwrap().write_all(chal_md.as_bytes())?;
-
             Ok(())
         })
         .try_join_all()
