@@ -127,7 +127,7 @@ pub async fn deploy_challenges(
         .try_join_all()
         .await?;
 
-    debug!("collected challenge info: {:?}", chal_infos);
+    debug!("collected challenge info: {:#?}", chal_infos);
 
     // now update frontend with that info
     frontend::update_frontend(profile_name, &chal_infos).await?;

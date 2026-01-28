@@ -30,18 +30,23 @@ pub struct FrontendChalData {
     files: Vec<String>,
 }
 
-/// Post collected challenge info structs to frontend
-pub async fn update_frontend(profile_name: &str, chal_infos: &[FrontendChalData]) -> Result<()> {
+/// Post collected challenge info structs to frontend. Returns the response
+/// from frontend.
+pub async fn update_frontend(
+    profile_name: &str,
+    chal_infos: &[FrontendChalData],
+) -> Result<String> {
     let profile = get_profile_config(profile_name)?;
 
-    // Post collected challenge info to frontend
     let resp = ureq::post(format!("{}/chals/resolvestate", profile.frontend_url))
         .header("Authorization", format!("Token {}", profile.frontend_token))
         .send_json(chal_infos)
         .context("could not update frontend with challenge info")?;
-    // let json = resp.body().read_json()?;
+    let body = resp.into_body().read_to_string()?;
 
-    Ok(())
+    debug!("got response from frontend: {:?}", body);
+
+    Ok(body)
 }
 
 /// Sync deployed challenges with rCTF frontend
