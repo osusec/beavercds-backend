@@ -7,6 +7,7 @@ use itertools::Itertools;
 use s3::Bucket;
 use tokio;
 use tracing::{debug, error, info, trace, warn};
+use url::Url;
 
 use crate::builder::BuildResult;
 use crate::clients::bucket_client;
@@ -33,25 +34,36 @@ pub async fn upload_challenge_assets(
 
     info!("uploading assets for chal {:?}...", chal.directory);
 
+    // Upload each asset and collect the public url for each object.
     let uploaded = build_result
         .assets
         .iter()
         .map(|asset_file| async move {
             debug!("uploading file {:?}", asset_file);
-            // upload to bucket
-            let bucket_path = upload_single_file(bucket, chal, asset_file)
+            // Upload file to the bucket
+            let path_in_bucket = upload_single_file(bucket, chal, asset_file)
                 .await
                 .with_context(|| format!("failed to upload file {asset_file:?}"))?;
 
-            // return link to the uploaded file
-            // TODO: only works for AWS rn! support other providers
-            let url = format!(
-                "https://{bucket}.s3.{region}.amazonaws.com/{path}",
-                bucket = &profile.s3.bucket_name,
-                region = &profile.s3.region,
-                path = bucket_path.to_string_lossy(),
-            );
-            Ok(url)
+            // S3 API does not have a method to get the public URL, but does
+            // have one to create a presigned URL. We need the server to give us
+            // the correct URL since we can't reliably assume the format of the
+            // full URL for non-AWS storage providers that all have different
+            // formats for combining the endpoint and region.
+            //
+            // Generate a presigned url with expiry in one second, just to make
+            // sure this can't be used.
+            let presigned_url = bucket
+                .presign_get(path_in_bucket.to_string_lossy(), 1, None)
+                .await
+                .context("failed to fetch presigned url")?;
+            trace!("got temporary presigned GET: {presigned_url}");
+
+            // Strip off the signing parameters to get the public object url
+            let mut url = Url::parse(&presigned_url)?;
+            url.set_query(None);
+
+            Ok(url.to_string())
         })
         .try_join_all()
         .await
