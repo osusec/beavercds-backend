@@ -24,8 +24,8 @@ pub struct FrontendChalData {
     author: String,
     category: String,
     description: String,
-    min_points: u32,
-    max_points: u32,
+    min_points: i64,
+    max_points: i64,
     flag: String,
     files: Vec<String>,
 }
@@ -57,6 +57,7 @@ pub async fn render_frontend_info(
     kube_result: &KubeDeployResult,
     s3_result: &S3DeployResult,
 ) -> Result<FrontendChalData> {
+    let config = get_config()?;
     let profile = get_profile_config(profile_name)?;
     let enabled_challenges = enabled_challenges(profile_name)?;
 
@@ -96,14 +97,26 @@ pub async fn render_frontend_info(
         FlagType::Verifier { verifier } => unimplemented!("flag custom verifier not implemented"),
     };
 
+    // Get point class from challenge or use default from repo config
+    let point_class_name = chal
+        .point_class
+        .as_ref()
+        .unwrap_or(&config.defaults.point_class);
+    // Then look the class name up in the repo config
+    let point_info = config
+        .point_classes
+        .iter()
+        .find(|class| class.name == *point_class_name)
+        .ok_or(anyhow!("challenge points are missing in config"))?;
+
     let chal_data = FrontendChalData {
         id: chal.slugify_slash(),
         name: chal.name.to_string(),
         author: chal.author.to_string(),
         category: chal.category.to_string(),
         description: rendered_desc,
-        min_points: 0, // TODO! lookup
-        max_points: 0, // TODO! lookup
+        min_points: point_info.min,
+        max_points: point_info.max,
         flag,
         files: s3_result.uploaded_asset_urls.clone(),
     };
