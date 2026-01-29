@@ -21,11 +21,15 @@ point_classes:
     max: 1337
   - name: "simple"
     min: 100
-    max: 500
+    max: 50
+  - name: "survey"
+    min: 1
+    max: 1
 
 deploy:
   # control challenge deployment status explicitly per environment/profile
   testing:
+    misc/survey: true
     misc/garf: true
     pwn/notsh: true
     web/bar: true

@@ -1,0 +1,9 @@
+name: survey
+author: Management
+description: |
+  worth one point! (probably)
+
+difficulty: survey
+
+flag:
+  text: dam{wow_survey}
