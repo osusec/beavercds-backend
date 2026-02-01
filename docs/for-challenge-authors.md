@@ -179,8 +179,6 @@ description: |
 
   {{ url }}
 
-difficulty: 1
-
 flag:
   file: ./flag
 

@@ -86,7 +86,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                     name: inquire::Text::new("Point class:")
                         .with_validator(inquire::required!("Please provide a name."))
                         .with_help_message("The name of the point class.")
-                        .with_placeholder(example_values::POINTS_EASY_DIFFICULTY)
+                        .with_placeholder(example_values::POINTS_EASY_CLASS)
                         .prompt()?,
                     min: inquire::CustomType::<i64>::new("Minimum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
@@ -260,7 +260,7 @@ pub fn placeholder_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            point_class: example_values::DEFAULTS_DIFFICULTY.to_string(),
+            point_class: example_values::DEFAULTS_CLASS.to_string(),
             resources: config::Resource {
                 cpu: example_values::DEFAULTS_RESOURCES_CPU,
                 memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
@@ -268,12 +268,12 @@ pub fn placeholder_init() -> config::RcdsConfig {
         },
         point_classes: vec![
             config::PointClass {
-                name: example_values::POINTS_EASY_DIFFICULTY.to_string(),
+                name: example_values::POINTS_EASY_CLASS.to_string(),
                 min: example_values::POINTS_EASY_MIN,
                 max: example_values::POINTS_EASY_MAX,
             },
             config::PointClass {
-                name: example_values::POINTS_HARD_DIFFICULTY.to_string(),
+                name: example_values::POINTS_HARD_CLASS.to_string(),
                 min: example_values::POINTS_HARD_MIN,
                 max: example_values::POINTS_HARD_MAX,
             },
