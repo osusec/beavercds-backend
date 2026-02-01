@@ -20,7 +20,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
     println!("All fields that can be set in rcds.yaml can also be set via environment variables.");
     println!("See the docs for more info on each field: https://beavercds.info/reference/rcds-yaml-reference.html");
 
-    let difficulty_names; // set during `points` prompt later
+    let class_names; // set during `points` prompt later
 
     // FORMATTING NOTE: Some of these help messages cause rustfmt to silently
     // fail to format this struct definition. Commenting out the marked
@@ -73,50 +73,50 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
             },
         },
 
-        points: {
-            println!("You can define several challenge difficulty classes below.");
-            let mut again = inquire::Confirm::new("Do you want to provide a difficulty class?")
+        point_classes: {
+            println!("You can define several challenge point classes below.");
+            let mut again = inquire::Confirm::new("Do you want to provide a point class?")
                 .with_default(false)
                 .prompt()?;
 
             println!("Challenge points are dynamic. For a static challenge, simply set minimum and maximum points to the same value.");
             let mut points = vec![];
             while again {
-                let points_obj = config::ChallengePoints {
-                    difficulty: inquire::Text::new("Difficulty class:")
+                let points_obj = config::PointClass {
+                    name: inquire::Text::new("Point class:")
                         .with_validator(inquire::required!("Please provide a name."))
-                        .with_help_message("The name of the difficulty class.")
+                        .with_help_message("The name of the point class.")
                         .with_placeholder(example_values::POINTS_EASY_DIFFICULTY)
                         .prompt()?,
                     min: inquire::CustomType::<i64>::new("Minimum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
-                        .with_help_message("The minimum number of points that challenges within this difficulty class are worth.") // too long to format
+                        .with_help_message("The minimum number of points that challenges within this class are worth.") // too long to format
                         .with_default(example_values::POINTS_EASY_MIN)
                         .prompt()?,
                     max: inquire::CustomType::<i64>::new("Maximum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
-                        .with_help_message("The maximum number of points that challenges within this difficulty class are worth.") // too long to format
+                        .with_help_message("The maximum number of points that challenges within this class are worth.") // too long to format
                         .with_default(example_values::POINTS_EASY_MAX)
                         .prompt()?,
                 };
                 points.push(points_obj);
 
-                again = inquire::Confirm::new("Do you want to provide another difficulty class?")
+                again = inquire::Confirm::new("Do you want to provide another point class?")
                     .with_default(false)
                     .prompt()?;
             }
             // save owned copy of difficulty category names for use below
-            difficulty_names = points.iter().map(|p| p.difficulty.clone()).collect_vec();
+            class_names = points.iter().map(|p| p.name.clone()).collect_vec();
             points
         },
         defaults: config::Defaults {
-            difficulty: {
-                if difficulty_names.is_empty() {
+            point_class: {
+                if class_names.is_empty() {
                     String::new()
                 } else {
                     inquire::Select::new(
-                        "Please choose the default difficulty class:",
-                        difficulty_names,
+                        "Please choose the default point class:",
+                        class_names,
                     )
                     .prompt()?
                 }
@@ -230,13 +230,13 @@ pub fn blank_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            difficulty: "".to_string(),
+            point_class: "".to_string(),
             resources: config::Resource {
                 cpu: 0,
                 memory: "".to_string(),
             },
         },
-        points: vec![],
+        point_classes: vec![],
         deploy: HashMap::from([]),
         profiles: HashMap::from([]),
     }
@@ -260,20 +260,20 @@ pub fn placeholder_init() -> config::RcdsConfig {
             },
         },
         defaults: config::Defaults {
-            difficulty: example_values::DEFAULTS_DIFFICULTY.to_string(),
+            point_class: example_values::DEFAULTS_DIFFICULTY.to_string(),
             resources: config::Resource {
                 cpu: example_values::DEFAULTS_RESOURCES_CPU,
                 memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
             },
         },
-        points: vec![
-            config::ChallengePoints {
-                difficulty: example_values::POINTS_EASY_DIFFICULTY.to_string(),
+        point_classes: vec![
+            config::PointClass {
+                name: example_values::POINTS_EASY_DIFFICULTY.to_string(),
                 min: example_values::POINTS_EASY_MIN,
                 max: example_values::POINTS_EASY_MAX,
             },
-            config::ChallengePoints {
-                difficulty: example_values::POINTS_HARD_DIFFICULTY.to_string(),
+            config::PointClass {
+                name: example_values::POINTS_HARD_DIFFICULTY.to_string(),
                 min: example_values::POINTS_HARD_MIN,
                 max: example_values::POINTS_HARD_MAX,
             },

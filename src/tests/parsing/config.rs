@@ -75,14 +75,14 @@ fn all_yaml() {
                 },
             },
             defaults: Defaults {
-                difficulty: "easy".to_string(),
+                point_class: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
-            points: vec![ChallengePoints {
-                difficulty: "easy".to_string(),
+            point_classes: vec![PointClass {
+                name: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],
@@ -195,14 +195,14 @@ fn registry_tag_format() {
                 },
             },
             defaults: Defaults {
-                difficulty: "easy".to_string(),
+                point_class: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
-            points: vec![ChallengePoints {
-                difficulty: "easy".to_string(),
+            point_classes: vec![PointClass {
+                name: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],

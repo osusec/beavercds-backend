@@ -53,9 +53,9 @@ struct RcdsConfig {
     flag_regex: String,
     registry: Registry,
     defaults: Defaults,
+    point_classes: Vec<PointClass>,
     deploy: Map<String, ProfileDeploy>,
     profiles: Map<String, ProfileConfig>,
-    points: Vec<ChallengePoints>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -121,8 +121,17 @@ struct Resource {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
 struct Defaults {
-    difficulty: String,
+    point_class: String,
     resources: Resource,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[fully_pub]
+struct PointClass {
+    /// Name of this difficulty level
+    name: String,
+    min: i64,
+    max: i64,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -143,15 +152,6 @@ struct ProfileConfig {
     kubecontext: String,
     s3: S3Config,
     dns: serde_yaml_ng::Value,
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-#[fully_pub]
-struct ChallengePoints {
-    /// Name of this difficulty level
-    difficulty: String,
-    min: i64,
-    max: i64,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

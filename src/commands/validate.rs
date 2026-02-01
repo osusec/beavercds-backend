@@ -27,7 +27,7 @@ pub fn run() -> Result<()> {
     for chal in chals {
         // does point class exist in default config?
         if let Some(class) = &chal.point_class {
-            if !config.points.iter().any(|p| &p.difficulty == class) {
+            if !config.point_classes.iter().any(|p| &p.name == class) {
                 bail!(
                     "point class '{}' for challenge {} does not exist in config",
                     chal.slugify_slash(),
