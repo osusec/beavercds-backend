@@ -118,6 +118,7 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
 
 #[serde_nested]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[fully_pub]
 pub struct ChallengeConfig {
     name: String,

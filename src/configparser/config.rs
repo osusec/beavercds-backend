@@ -48,6 +48,7 @@ pub fn parse() -> Result<RcdsConfig> {
 //
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[fully_pub]
 struct RcdsConfig {
     flag_regex: String,
