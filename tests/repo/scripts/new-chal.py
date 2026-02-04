@@ -2,9 +2,12 @@
 
 # Standardlib only!
 import argparse
+import hashlib
 import os
-import readline
+import re
 import sys
+import time
+from pathlib import Path
 
 parser = argparse.ArgumentParser(
     description="""
@@ -29,6 +32,9 @@ parser.add_argument(
     help="Challenge author(s), if multiple put all as one string",
 )
 parser.add_argument("-f", "--flag", help="Flag for the challenge")
+parser.add_argument(
+    "-t", "--type", help="Type of challenge, either tcp, web, or static"
+)
 
 args = parser.parse_args()
 
@@ -41,10 +47,13 @@ while args.name is None or args.name == "":
     args.name = input("Name of challenge? ")
 
 while args.category is None or args.category == "":
-    args.category = input("Category? ")
+    args.category = input("Category? ").lower()
 
 while args.author is None or args.author == "":
     args.author = input("Author(s)? ")
+
+while args.type not in ["tcp", "web", "static"]:
+    args.type = input("Type of challenge (tcp, web, static)? ").lower()
 
 # make sure category dir exists
 if not os.path.isdir(args.category):
@@ -60,7 +69,39 @@ if not os.path.isdir(args.category):
         print("not creating")
         exit(1)
 
-# create challenge.yaml
+# create challenge name in category dir
+slug = args.name.lower().replace(" ", "-")
+chaldir = Path(args.category) / slug
 
+if os.path.isdir(chaldir):
+    print(f"ERR: challenge directory '{chaldir}' already exists")
+    exit(1)
+os.mkdir(chaldir)
 
-print(f"DBG: after prompt: {args}")
+# generate challenge id from info and timestamp, git-style truncated hash
+h = hashlib.sha256(args.name.encode())
+h.update(str(time.time()).encode())
+id = h.hexdigest()[:8]
+
+# add connection info template to challenge description if needed
+conn = {"tcp": "{{ nc }}", "http": "{{ link }}", "static": ""}[args.type]
+
+# template out challenge.yaml
+yaml = f"""
+name: "{args.name}"
+author: "{args.author}"
+description: |
+  Your description here.
+
+  {conn}
+
+challenge_id: "{id}" # DON'T CHANGE THIS!
+
+flag:
+  file: ./flag
+"""
+
+with open(chaldir / "challenge.yaml", "w") as f:
+    f.write(yaml)
+
+print(f"Created new challenge at {chaldir}. Make sure to edit the challenge.yaml!")
