@@ -40,9 +40,6 @@ args = parser.parse_args()
 
 
 # If no cli flags were specified, prompt for them instead
-
-print(f"DBG: raw args: {args}")
-
 while args.name is None or args.name == "":
     args.name = input("Name of challenge? ")
 
@@ -54,6 +51,10 @@ while args.author is None or args.author == "":
 
 while args.type not in ["tcp", "web", "static"]:
     args.type = input("Type of challenge (tcp, web, static)? ").lower()
+
+while args.flag is None or args.flag == "":
+    args.flag = input("Flag? ")
+
 
 # make sure category dir exists
 if not os.path.isdir(args.category):
@@ -82,9 +83,11 @@ os.mkdir(chaldir)
 h = hashlib.sha256(args.name.encode())
 h.update(str(time.time()).encode())
 id = h.hexdigest()[:8]
+# and a port number somewhere in 3xxxx
+port = 30000 + int(h.hexdigest(), base=16) % 10000
 
 # add connection info template to challenge description if needed
-conn = {"tcp": "{{ nc }}", "http": "{{ link }}", "static": ""}[args.type]
+connstr = {"tcp": "{{ nc }}", "web": "{{ link }}", "static": ""}[args.type]
 
 # template out challenge.yaml
 yaml = f"""
@@ -93,15 +96,70 @@ author: "{args.author}"
 description: |
   Your description here.
 
-  {conn}
+  {connstr}
 
 challenge_id: "{id}" # DON'T CHANGE THIS!
 
 flag:
   file: ./flag
+
 """
+
+
+# fill in more relevant provide/pods info per challenge type
+if args.type == "static":
+    yaml += """
+# Files that will get provided to the player on the scoreboard:
+provide:
+  # single file from this directory
+  - example.png
+
+  # multiple files in an archive
+  - as: multiple.zip
+    include:
+      - foo
+      - bar
+"""
+
+else:
+    if args.type == "tcp":
+        exposestr = f"tcp: {port}"
+    else:
+        exposestr = f"http: {slug}"
+
+    yaml += f"""
+# Files that will get provided to the player on the scoreboard:
+provide:
+  # single file from this directory
+  - example.png
+
+  # files from inside the container from `pods:`
+  - from: mainctr
+    include:
+      - /usr/lib/x86_64-linux-gnu/libc.so.6
+
+  # or multiple in an archive
+  - as: multiple.zip
+    include:
+      - foo
+      - bar
+
+pods:
+  - name: mainctr           # Used by `provide` includes above
+    build: .                # Where your container Dockerfile is
+    replicas: 2
+    ports:
+      - internal: 1337      # What your container listens on
+        expose:
+          # What it will be exposed as publically
+          {exposestr}
+"""
+
 
 with open(chaldir / "challenge.yaml", "w") as f:
     f.write(yaml)
+
+with open(chaldir / "flag", "w") as f:
+    f.write(args.flag + "\n")
 
 print(f"Created new challenge at {chaldir}. Make sure to edit the challenge.yaml!")
