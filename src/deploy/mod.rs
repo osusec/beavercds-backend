@@ -114,11 +114,13 @@ pub async fn check_setup(profile: &ProfileConfig) -> Result<()> {
 
 /// Deploy and upload all components of all challenges in `build_results`.
 ///
+/// # Errors
+/// If any challenge deployment(s) error, the first error will be
+/// returned.
+///
 /// # Panics
-/// The attempt to write challenge info may panic if the md_lock
-/// is already held by the current thread when acquiring the lock.
-/// This should never actually happen because the lock isn't held
-/// across an await point.
+/// Acquiring the mutex lock should never actually happen because the lock
+/// isn't held across an await point.
 pub async fn deploy_challenges(
     profile_name: &str,
     build_results: &[(&ChallengeConfig, BuildResult)],
@@ -146,6 +148,12 @@ pub async fn deploy_challenges(
 }
 
 /// Deploy / upload all components of a single challenge.
+///
+/// # Errors
+/// The first error is returned from (in order):
+/// 1. kubernetes manifest application
+/// 2. asset uploads
+/// 3. updating challenge info in the frontend application
 async fn deploy_single_challenge(
     profile_name: &str,
     chal: &ChallengeConfig,
