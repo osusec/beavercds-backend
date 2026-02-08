@@ -32,7 +32,12 @@ where
 // Minijinja strict rendering with error
 //
 
-/// Similar to minijinja.render!(), but return Error if any undefined values.
+/// Similar to minijinja.render!(), but strictly disallows undefined
+/// template variables.
+///
+/// # Errors
+/// If any template variables are undefined, an error will be returned.
+/// See docs for `minijinja.render!` for additional error conditions.
 pub fn render_strict(template: &str, context: minijinja::Value) -> Result<String> {
     let mut strict_env = minijinja::Environment::new();
     // error on any undefined template variables
