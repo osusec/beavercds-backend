@@ -19,6 +19,11 @@ use crate::configparser::{get_profile_config, ChallengeConfig};
 use crate::utils::TryJoinAll;
 
 /// check to make sure that the needed ingress charts are deployed and running
+///
+/// # Errors
+/// If the kubernetes client encounters an error, that error is returned.
+/// Otherwise, an error is returned if a chart is either not deployed or
+/// in a failed state.
 pub async fn check_setup(profile: &ProfileConfig) -> Result<()> {
     let kube = kube_client(profile).await?;
     let secrets: kube::Api<Secret> = kube::Api::namespaced(kube, cluster_setup::INGRESS_NAMESPACE);
