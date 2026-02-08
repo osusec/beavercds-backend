@@ -112,7 +112,13 @@ pub async fn check_setup(profile: &ProfileConfig) -> Result<()> {
     }
 }
 
-/// For each challenge, deploy/upload all components of the challenge
+/// Deploy and upload all components of all challenges in `build_results`.
+///
+/// # Panics
+/// The attempt to write challenge info may panic if the md_lock
+/// is already held by the current thread when acquiring the lock.
+/// This should never actually happen because the lock isn't held
+/// across an await point.
 pub async fn deploy_challenges(
     profile_name: &str,
     build_results: &[(&ChallengeConfig, BuildResult)],
