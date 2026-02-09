@@ -20,8 +20,8 @@ point_classes:
     min: 100
     max: 1337
   - name: "simple"
-    min: 100
-    max: 50
+    min: 50
+    max: 100
   - name: "survey"
     min: 1
     max: 1

@@ -9,6 +9,19 @@ pub fn run() -> Result<()> {
     info!("validating config...");
 
     let config = get_config()?;
+
+    // is point class max/min order correct?
+    for class in config.point_classes.iter() {
+        if class.min > class.max {
+            bail!(
+                "min/max points are backwards for point class '{}' (min: {} > max: {})",
+                class.name,
+                class.min,
+                class.max
+            )
+        }
+    }
+
     info!("  config ok!");
 
     info!("validating challenges...");
