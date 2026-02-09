@@ -12,13 +12,16 @@ registry:
     pass: alsofake
 
 defaults:
-  difficulty: "standard"
+  point_class: "standard"
   resources: { cpu: 1, memory: 500M }
 
-points:
-  - difficulty: "standard"
+point_classes:
+  - name: "standard"
     min: 100
     max: 1337
+  - name: "simple"
+    min: 100
+    max: 500
 
 deploy:
   # control challenge deployment status explicitly per environment/profile

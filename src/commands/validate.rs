@@ -23,6 +23,20 @@ pub fn run() -> Result<()> {
             bail!("failed to validate challenges");
         }
     };
+    // double check specific things about challenges
+    for chal in chals {
+        // does point class exist in default config?
+        if let Some(class) = &chal.point_class {
+            if !config.point_classes.iter().any(|p| &p.name == class) {
+                bail!(
+                    "point class '{}' for challenge {} does not exist in config",
+                    chal.slugify_slash(),
+                    class
+                )
+            }
+        }
+    }
+
     info!("  challenges ok!");
 
     // check global deploy settings for invalid challenges
@@ -44,7 +58,7 @@ pub fn run() -> Result<()> {
         // TODO: figure out how to return this error directly
         if !missing.is_empty() {
             error!(
-                "Deploy settings for profile '{profile_name}' has challenges that do not exist:"
+                "deploy settings for profile '{profile_name}' has challenges that do not exist:"
             );
             missing.iter().for_each(|path| error!("  - {path}"));
             bail!("failed to validate deploy config");

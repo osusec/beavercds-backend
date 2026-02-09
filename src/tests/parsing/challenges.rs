@@ -11,7 +11,7 @@ const VALID_CHAL: &str = r#"
     name: testchal
     author: nobody
     description: just a test challenge
-    difficulty: 1
+    point_class: example
 
     flag:
         text: test{it-works}
@@ -83,7 +83,7 @@ fn challenge_two_levels() {
                 name: "testchal".to_string(),
                 author: "nobody".to_string(),
                 description: "just a test challenge".to_string(),
-                difficulty: 1,
+                point_class: Some("example".to_string()),
 
                 category: "foo".to_string(),
                 directory: PathBuf::from("foo/test"),
@@ -127,7 +127,7 @@ fn challenge_missing_fields() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
         "#,
         )?;
 
@@ -137,7 +137,7 @@ fn challenge_missing_fields() {
             r#"
             name: testchal
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{asdf}
@@ -150,7 +150,7 @@ fn challenge_missing_fields() {
             r#"
             name: testchal
             author: nobody
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{asdf}
@@ -178,7 +178,7 @@ fn challenge_no_provides_or_pods() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -195,6 +195,31 @@ fn challenge_no_provides_or_pods() {
 }
 
 #[test]
+/// Challenges can omit point_class to use the default at deploy
+fn challenge_no_point_class() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+
+            flag:
+                text: test{it-works}
+        "#,
+        )?;
+
+        let chals = parse_all().unwrap();
+
+        assert_eq!(chals[0].point_class, None);
+
+        Ok(())
+    })
+}
+
+#[test]
 /// Challenge provide files parse correctly
 fn challenge_provide() {
     figment::Jail::expect_with(|jail| {
@@ -205,7 +230,7 @@ fn challenge_provide() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -292,7 +317,7 @@ fn challenge_provide_no_include() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -322,7 +347,7 @@ fn challenge_pods() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -399,7 +424,7 @@ fn challenge_pod_build() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -489,7 +514,7 @@ fn challenge_pod_env() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}
@@ -575,7 +600,7 @@ fn challenge_pod_bad_env() {
             name: testchal
             author: nobody
             description: just a test challenge
-            difficulty: 1
+            point_class: example
 
             flag:
                 text: test{it-works}

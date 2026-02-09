@@ -16,19 +16,18 @@ registry:
     user: "{{ registry.cluster.user }}"
     pass: "{{ registry.cluster.pass }}"
 
-# Default difficulty class and resource requests used for challenges that did
+# Default point class and resource requests used for challenges that did
 # not set their own.
 defaults:
-  difficulty: "{{ defaults.difficulty }}"
+  point_class: "{{ defaults.point_class }}"
   resources: { cpu: {{ defaults.resources.cpu }}, memory: "{{ defaults.resources.memory }}" }
 
-# The list of different difficulties that challenges can be assigned, and how
-# many points challenges of that difficulty class should be worth. All
-# challenges use dynamic scoring; for static points set both min and max to the
-# same value.
-points:
-  {%- for pts in points %}
-  - difficulty: "{{ pts.difficulty }}"
+# The list of different point classes that challenges can be assigned, and how
+# many points that challenges in that class should be worth. All challenges use
+# dynamic scoring; for static points set both min and max to the same value.
+point_classes:
+  {%- for pts in point_classes %}
+  - name: "{{ pts.name }}"
     min: {{ pts.min }}
     max: {{ pts.max }}
   {%- else %}

@@ -118,6 +118,7 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
 
 #[serde_nested]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 #[fully_pub]
 pub struct ChallengeConfig {
     name: String,
@@ -156,8 +157,10 @@ pub struct ChallengeConfig {
 
     directory: PathBuf,
 
-    #[serde(default = "default_difficulty")]
-    difficulty: i64,
+    // The point class to use for this challenge. Corresponds to a name defined
+    // in the repo rcds.yaml config. Optional, will use the configured default
+    // if not set.
+    point_class: Option<String>,
 
     flag: FlagType,
 
@@ -220,10 +223,6 @@ impl ChallengeConfig {
             .split_whitespace()
             .join("-")
     }
-}
-
-fn default_difficulty() -> i64 {
-    1
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

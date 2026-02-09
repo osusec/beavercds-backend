@@ -30,17 +30,16 @@ registry:
     user: ""
     pass: ""
 
-# Default difficulty class and resource requests used for challenges that did
+# Default point class and resource requests used for challenges that did
 # not set their own.
 defaults:
-  difficulty: ""
+  point_class: ""
   resources: { cpu: 0, memory: "" }
 
-# The list of different difficulties that challenges can be assigned, and how
-# many points challenges of that difficulty class should be worth. All
-# challenges use dynamic scoring; for static points set both min and max to the
-# same value.
-points:
+# The list of different point classes that challenges can be assigned, and how
+# many points that challenges in that class should be worth. All challenges use
+# dynamic scoring; for static points set both min and max to the same value.
+point_classes:
   []
 
 # Control what challenges are deployed in each environment profile.
@@ -83,21 +82,20 @@ registry:
     user: "cluster_user"
     pass: "alsofake"
 
-# Default difficulty class and resource requests used for challenges that did
+# Default point class and resource requests used for challenges that did
 # not set their own.
 defaults:
-  difficulty: "easy"
+  point_class: "easy"
   resources: { cpu: 1, memory: "500M" }
 
-# The list of different difficulties that challenges can be assigned, and how
-# many points challenges of that difficulty class should be worth. All
-# challenges use dynamic scoring; for static points set both min and max to the
-# same value.
-points:
-  - difficulty: "easy"
+# The list of different point classes that challenges can be assigned, and how
+# many points that challenges in that class should be worth. All challenges use
+# dynamic scoring; for static points set both min and max to the same value.
+point_classes:
+  - name: "easy"
     min: 200
     max: 500
-  - difficulty: "hard"
+  - name: "hard"
     min: 300
     max: 600
 

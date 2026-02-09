@@ -27,11 +27,11 @@ fn all_yaml() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: "easy"
+                    point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
 
-                points:
-                  - difficulty: "easy"
+                point_classes:
+                  - name: "easy"
                     min: 0
                     max: 1337
 
@@ -75,14 +75,14 @@ fn all_yaml() {
                 },
             },
             defaults: Defaults {
-                difficulty: "easy".to_string(),
+                point_class: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
-            points: vec![ChallengePoints {
-                difficulty: "easy".to_string(),
+            point_classes: vec![PointClass {
+                name: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],
@@ -147,11 +147,11 @@ fn registry_tag_format() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: "easy"
+                    point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
 
-                points:
-                  - difficulty: "easy"
+                point_classes:
+                  - name: "easy"
                     min: 0
                     max: 1337
 
@@ -195,14 +195,14 @@ fn registry_tag_format() {
                 },
             },
             defaults: Defaults {
-                difficulty: "easy".to_string(),
+                point_class: "easy".to_string(),
                 resources: Resource {
                     cpu: 1,
                     memory: "500M".to_string(),
                 },
             },
-            points: vec![ChallengePoints {
-                difficulty: "easy".to_string(),
+            point_classes: vec![PointClass {
+                name: "easy".to_string(),
                 min: 0,
                 max: 1337,
             }],
@@ -266,11 +266,11 @@ fn yaml_with_env_overrides() {
                         pass: alsofake
 
                 defaults:
-                    difficulty: "easy"
+                    point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
 
-                points:
-                  - difficulty: "easy"
+                point_classes:
+                  - name: "easy"
                     min: 0
                     max: 1337
 
@@ -339,11 +339,11 @@ fn partial_yaml_with_env() {
                     domain: registry.example/test
 
                 defaults:
-                    difficulty: "easy"
+                    point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
 
-                points:
-                  - difficulty: "easy"
+                point_classes:
+                  - name: "easy"
                     min: 0
                     max: 1337
 
@@ -435,11 +435,11 @@ fn bad_yaml_missing_secrets() {
                     domain: registry.example/test
 
                 defaults:
-                    difficulty: "easy"
+                    point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
 
-                points:
-                  - difficulty: "easy"
+                point_classes:
+                  - name: "easy"
                     min: 0
                     max: 1337
 
