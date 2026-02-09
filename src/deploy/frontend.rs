@@ -24,8 +24,8 @@ pub struct FrontendChalData {
     author: String,
     category: String,
     description: String,
-    min_points: i64,
-    max_points: i64,
+    min_points: u32,
+    max_points: u32,
     flag: String,
     files: Vec<String>,
 }
