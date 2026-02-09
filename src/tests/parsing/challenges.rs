@@ -13,6 +13,8 @@ const VALID_CHAL: &str = r#"
     description: just a test challenge
     point_class: example
 
+    challenge_id: asdf
+
     flag:
         text: test{it-works}
 
@@ -87,6 +89,7 @@ fn challenge_two_levels() {
 
                 category: "foo".to_string(),
                 directory: PathBuf::from("foo/test"),
+                challenge_id: "asdf".to_string(),
 
                 flag: FlagType::Text {
                     text: "test{it-works}".to_string()
@@ -128,6 +131,7 @@ fn challenge_missing_fields() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
         "#,
         )?;
 
@@ -138,6 +142,7 @@ fn challenge_missing_fields() {
             name: testchal
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{asdf}
@@ -151,6 +156,20 @@ fn challenge_missing_fields() {
             name: testchal
             author: nobody
             point_class: example
+            challenge_id: asdf
+
+            flag:
+                text: test{asdf}
+        "#,
+        )?;
+
+        let dir = jail.create_dir("test/noid")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
 
             flag:
                 text: test{asdf}
@@ -161,7 +180,7 @@ fn challenge_missing_fields() {
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
 
-        assert_eq!(errs.len(), 3);
+        assert_eq!(errs.len(), 4);
 
         Ok(())
     })
@@ -179,6 +198,7 @@ fn challenge_no_provides_or_pods() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -205,6 +225,8 @@ fn challenge_no_point_class() {
             name: testchal
             author: nobody
             description: just a test challenge
+            # point_class:
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -231,6 +253,7 @@ fn challenge_provide() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -318,6 +341,7 @@ fn challenge_provide_no_include() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -348,6 +372,7 @@ fn challenge_pods() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -425,6 +450,7 @@ fn challenge_pod_build() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -515,6 +541,7 @@ fn challenge_pod_env() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -601,6 +628,7 @@ fn challenge_pod_bad_env() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}

@@ -5,6 +5,8 @@ description: |-
 
   `nc {{host}} {{port}}`
 
+challenge_id: bbbbbb
+
 provide:
   - from: main
     as: notsh.zip

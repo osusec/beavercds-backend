@@ -110,7 +110,7 @@ pub async fn render_frontend_info(
         .ok_or(anyhow!("challenge points are missing in config"))?;
 
     let chal_data = FrontendChalData {
-        id: chal.slugify_slash(),
+        id: chal.challenge_id.to_string(),
         name: chal.name.to_string(),
         author: chal.author.to_string(),
         category: chal.category.to_string(),

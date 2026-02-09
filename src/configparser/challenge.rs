@@ -162,6 +162,8 @@ pub struct ChallengeConfig {
     // if not set.
     point_class: Option<String>,
 
+    challenge_id: String,
+
     flag: FlagType,
 
     #[serde(default)]

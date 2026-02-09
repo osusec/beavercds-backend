@@ -5,5 +5,7 @@ description: |
 
 point_class: survey
 
+challenge_id: '44c41a'
+
 flag:
   text: dam{wow_survey}
