@@ -3,7 +3,7 @@ author: Management
 description: |
   worth one point! (probably)
 
-difficulty: survey
+point_class: survey
 
 flag:
   text: dam{wow_survey}
