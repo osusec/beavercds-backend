@@ -121,7 +121,7 @@ fn challenge_three_levels() {
 }
 
 #[test]
-fn challenge_missing_fields() {
+fn challenge_no_flag() {
     figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/noflag")?;
         jail.create_file(
@@ -135,6 +135,23 @@ fn challenge_missing_fields() {
         "#,
         )?;
 
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noflag/challenge.yaml": missing field `flag`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_author() {
+    figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/noauthor")?;
         jail.create_file(
             dir.join("challenge.yaml"),
@@ -149,6 +166,23 @@ fn challenge_missing_fields() {
         "#,
         )?;
 
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noauthor/challenge.yaml": missing field `author`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_description() {
+    figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/nodescrip")?;
         jail.create_file(
             dir.join("challenge.yaml"),
@@ -163,6 +197,23 @@ fn challenge_missing_fields() {
         "#,
         )?;
 
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/nodescrip/challenge.yaml": missing field `description`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_id() {
+    figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/noid")?;
         jail.create_file(
             dir.join("challenge.yaml"),
@@ -180,7 +231,11 @@ fn challenge_missing_fields() {
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
 
-        assert_eq!(errs.len(), 4);
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noid/challenge.yaml": missing field `challenge_id`"#
+        );
 
         Ok(())
     })
@@ -354,7 +409,13 @@ fn challenge_provide_no_include() {
         let chals = parse_all();
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
+
         assert_eq!(errs.len(), 1);
+        // TODO: fix this really bad error message!
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "foo/test/challenge.yaml": data did not match any variant of untagged enum ProvideConfig for key "default.provide.0" in foo/test/challenge.yaml YAML file"#
+        );
 
         Ok(())
     })
@@ -649,7 +710,12 @@ fn challenge_pod_bad_env() {
         let chals = parse_all();
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
+
         assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "foo/test/challenge.yaml": could not parse envvar=value from "FOO" (missing '='?)"#
+        );
 
         Ok(())
     })
