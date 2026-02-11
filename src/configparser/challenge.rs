@@ -89,7 +89,9 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
                         if split.len() == 2 {
                             Ok((split[0].to_string(), split[1].to_string()))
                         } else {
-                            Err(anyhow!("Cannot split envvar {var:?}"))
+                            Err(anyhow!(
+                                "could not parse envvar=value from {var:?} (missing '='?)"
+                            ))
                         }
                     })
                     .collect::<Result<_>>()?;
