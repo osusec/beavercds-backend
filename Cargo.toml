@@ -18,6 +18,7 @@ figment = { version = "0.10.19", features = ["env", "yaml", "test"] }
 zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
 regex = "1.11.1"
 inquire = "0.7.5"
+url = "2.5.8"
 
 # tracing
 tracing = { version = "0.1.41", features = ["attributes"] }
