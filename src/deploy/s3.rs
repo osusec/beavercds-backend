@@ -8,6 +8,7 @@ use s3::Bucket;
 use tokio;
 use tracing::{debug, error, info, trace, warn};
 
+use crate::builder::artifacts;
 use crate::builder::BuildResult;
 use crate::clients::bucket_client;
 use crate::configparser::config::ProfileConfig;
@@ -66,13 +67,13 @@ pub async fn upload_challenge_assets(
 async fn upload_single_file(
     bucket: &Bucket,
     chal: &ChallengeConfig,
-    file: &Path,
+    file: &artifacts::InputPath,
 ) -> Result<PathBuf> {
     // e.g. s3.example.domain/assets/misc/foo/stuff.zip
     let path_in_bucket = format!(
         "assets/{chal_slug}/{file}",
         chal_slug = chal.directory.to_string_lossy(),
-        file = file.file_name().unwrap().to_string_lossy()
+        file = file.as_ref().file_name().unwrap().to_string_lossy()
     );
 
     trace!("uploading {:?} to bucket path {:?}", file, &path_in_bucket);

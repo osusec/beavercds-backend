@@ -28,7 +28,7 @@ pub struct BuildResult {
     pub tags: Vec<TagWithSource>,
     /// Path on disk to local assets (both built and static).
     /// Will be empty if challenge has no file assets
-    pub assets: Vec<PathBuf>,
+    pub assets: Vec<artifacts::InputPath>,
 }
 
 /// Tag string with added context of where it came from (built locally or an upstream image)
