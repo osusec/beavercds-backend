@@ -103,6 +103,12 @@ challenge_id: "{id}" # DON'T CHANGE THIS!
 flag:
   file: ./flag
 
+
+# When editing this file, the challenge creation guide and field refence may be helpful:
+# https://beavercds.info/guides/challenge-quickstart.html
+# https://beavercds.info/reference/challenge-yaml-reference.html
+
+
 """
 
 
@@ -128,7 +134,6 @@ else:
         exposestr = f"http: {slug}"
 
     yaml += f"""
-# Files that will get provided to the player on the scoreboard:
 provide:
   # single file from this directory
   - example.png
@@ -137,6 +142,7 @@ provide:
   - from: mainctr
     include:
       - /usr/lib/x86_64-linux-gnu/libc.so.6
+      - /app/mybinary
 
   # or multiple in an archive
   - as: multiple.zip
@@ -144,14 +150,15 @@ provide:
       - foo
       - bar
 
+
 pods:
-  - name: mainctr           # Used by `provide` includes above
-    build: .                # Where your container Dockerfile is
+  - name: mainctr           # Name of container, used by file provides above
+    build: .                # Where your container Dockerfile is)
     replicas: 2
     ports:
       - internal: 1337      # What your container listens on
         expose:
-          # What it will be exposed as publically
+          # How the container will be exposed to players:
           {exposestr}
 """
 
