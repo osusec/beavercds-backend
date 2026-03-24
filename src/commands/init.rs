@@ -15,7 +15,7 @@ use crate::init;
 /// in the folder, optionally prompting the user to fill in info for the rcds
 /// config file.
 pub fn run(interactive: &bool, placeholders: &bool, blank: &bool, force: &bool) -> Result<()> {
-    let config_yaml = init::render_config_file(*interactive, *placeholders, *blank)?;
+    let config_yaml = init::render_config(*interactive, *placeholders, *blank)?;
     write_or_ask("rcds.yaml", &config_yaml, *force)?;
 
     write_or_ask(

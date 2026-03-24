@@ -15,7 +15,7 @@ use crate::utils::render_strict;
 pub mod example_values;
 pub mod templates;
 
-pub fn render_config_file(interactive: bool, placeholders: bool, blank: bool) -> Result<String> {
+pub fn render_config(interactive: bool, placeholders: bool, blank: bool) -> Result<String> {
     let options = if blank {
         blank_init()
     } else if placeholders {

@@ -1,12 +1,12 @@
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 
-use crate::init::render_config_file;
+use crate::init::render_config;
 
 #[test]
 /// Config template renders correctly with blank init
 fn blank_init_rendering() {
-    let rendered = render_config_file(false, false, true);
+    let rendered = render_config(false, false, true);
 
     assert!(rendered.is_ok(), "blank template failed to render");
     assert_eq!(
@@ -57,7 +57,7 @@ profiles:
 #[test]
 /// Config template renders correctly with example values
 fn example_init_rendering() {
-    let rendered = render_config_file(false, true, false);
+    let rendered = render_config(false, true, false);
 
     assert!(rendered.is_ok(), "example template failed to render");
     assert_eq!(
