@@ -27,23 +27,10 @@ pub fn run(_interactive: &bool, placeholders: &bool, blank: &bool, force: &bool)
         }
     }
 
-    let options = if *blank {
-        init::blank_init()
-    } else if *placeholders {
-        init::placeholder_init()
-    } else {
-        // default to interactive if no flags given
-        init::interactive_init()?
-    };
-
-    let configuration = init::templatize_init(&options).context("could not render template")?;
+    let config_yaml = init::render_config_file(*interactive, *placeholders, *blank)?;
 
     let mut f = File::create("rcds.yaml")?;
-    f.write_all(configuration.as_bytes())?;
-
-    // Note about external-dns
-    warn!("Note: external-dns configuration settings will need to be provided in rcds.yaml after file creation, under the `profiles.<name>.dns` key.");
-    warn!("Reference: https://kubernetes-sigs.github.io/external-dns/latest/charts/external-dns/");
+    f.write_all(config_yaml.as_bytes())?;
 
     Ok(())
 }
