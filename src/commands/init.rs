@@ -25,6 +25,10 @@ pub fn run(interactive: &bool, placeholders: &bool, blank: &bool, force: &bool) 
     )?;
     write_or_ask("./README.md", init::templates::README, *force)?;
 
+    // Note about external-dns
+    warn!("Note: external-dns configuration settings will need to be provided in rcds.yaml after file creation, under the `profiles.<name>.dns` key.");
+    warn!("Reference: https://kubernetes-sigs.github.io/external-dns/latest/charts/external-dns/");
+
     Ok(())
 }
 
@@ -43,7 +47,7 @@ fn write_or_ask(path: &str, content: &str, force: bool) -> Result<bool> {
                 // go ahead anyway
                 warn!("File already exists at {path:?}, but overwriting anyway due to --force")
             } else {
-                match inquire::Confirm::new("File {path:?} already exists! Overwrite?")
+                match inquire::Confirm::new(&format!("File {path:?} already exists! Overwrite?"))
                     .with_default(false)
                     .prompt()
                 {

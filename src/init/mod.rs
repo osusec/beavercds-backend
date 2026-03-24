@@ -27,10 +27,6 @@ pub fn render_config(interactive: bool, placeholders: bool, blank: bool) -> Resu
 
     let configuration = templatize_init(&options).context("could not render template")?;
 
-    // Note about external-dns
-    warn!("Note: external-dns configuration settings will need to be provided in rcds.yaml after file creation, under the `profiles.<name>.dns` key.");
-    warn!("Reference: https://kubernetes-sigs.github.io/external-dns/latest/charts/external-dns/");
-
     Ok(configuration)
 }
 
