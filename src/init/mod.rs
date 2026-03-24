@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use inquire;
 use itertools::Itertools;
 use minijinja;
@@ -15,7 +15,22 @@ use crate::utils::render_strict;
 pub mod example_values;
 pub mod templates;
 
-pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
+pub fn render_config(interactive: bool, placeholders: bool, blank: bool) -> Result<String> {
+    let options = if blank {
+        blank_init()
+    } else if placeholders {
+        placeholder_init()
+    } else {
+        // default to interactive if no flags given
+        interactive_init()?
+    };
+
+    let configuration = templatize_init(&options).context("could not render template")?;
+
+    Ok(configuration)
+}
+
+fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
     println!("For all prompts below, press Enter to leave blank.");
     println!("All fields that can be set in rcds.yaml can also be set via environment variables.");
     println!("See the docs for more info on each field: https://beavercds.info/reference/rcds-yaml-reference.html");
@@ -211,7 +226,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
     Ok(options)
 }
 
-pub fn blank_init() -> config::RcdsConfig {
+fn blank_init() -> config::RcdsConfig {
     trace!("building blank config");
 
     // struct does not implement Default on purpose, manually fill out as blank
@@ -242,7 +257,7 @@ pub fn blank_init() -> config::RcdsConfig {
     }
 }
 
-pub fn placeholder_init() -> config::RcdsConfig {
+fn placeholder_init() -> config::RcdsConfig {
     trace!("building placeholder values config");
 
     config::RcdsConfig {
@@ -307,7 +322,7 @@ pub fn placeholder_init() -> config::RcdsConfig {
     }
 }
 
-pub fn templatize_init(options: &config::RcdsConfig) -> Result<String> {
+fn templatize_init(options: &config::RcdsConfig) -> Result<String> {
     debug!("rendering template with {options:?}");
     render_strict(
         templates::RCDS,
