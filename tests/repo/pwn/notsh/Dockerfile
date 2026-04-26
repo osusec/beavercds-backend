@@ -1,10 +1,10 @@
 # IMAGE 1: build challenge
 # @AUTHOR: if your chal doesn't build seperately from being run (i.e. Python),
 #          delete all of the IMAGE 1 code
-FROM ubuntu:18.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # @AUTHOR: build requirements here
-RUN apt-get -qq update && apt-get -qq --no-install-recommends install build-essential
+RUN apt-get update && apt-get -qq --no-install-recommends install build-essential
 
 WORKDIR /build
 
@@ -15,10 +15,10 @@ RUN make container
 
 # IMAGE 2: run challenge
 # @AUTHOR: feel free to change base image as necessary (i.e. python, node)
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 
 # @AUTHOR: run requirements here
-RUN apt-get -qq update && apt-get -qq --no-install-recommends install xinetd
+RUN apt-get update && apt-get -qq --no-install-recommends install xinetd
 
 # copy binary
 WORKDIR /chal
