@@ -384,7 +384,7 @@ struct PortConfig {
     expose: ExposeType,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 #[fully_pub]
 enum ExposeType {
