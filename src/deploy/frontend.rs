@@ -31,6 +31,7 @@ pub struct FrontendChalData {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // used to validate response schema only
 pub struct FrontendResolveResponse {
     current: Vec<String>,
     removed: Vec<String>,
