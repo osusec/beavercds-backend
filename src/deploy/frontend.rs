@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, bail, Context, Error, Ok, Result};
 use itertools::Itertools;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, trace, warn};
 use ureq;
 
@@ -30,19 +30,29 @@ pub struct FrontendChalData {
     files: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct FrontendResolveResponse {
+    current: Vec<String>,
+    removed: Vec<String>,
+}
+
 /// Post collected challenge info structs to frontend. Returns the response
 /// from frontend.
 pub async fn update_frontend(
     profile_name: &str,
     chal_infos: &[FrontendChalData],
-) -> Result<String> {
+) -> Result<FrontendResolveResponse> {
     let profile = get_profile_config(profile_name)?;
 
-    let resp = ureq::post(format!("{}/chals/resolvestate", profile.frontend_url))
+    let resp = ureq::post(format!("{}/api/resolvestate", profile.frontend_url))
         .header("Authorization", format!("Token {}", profile.frontend_token))
         .send_json(chal_infos)
         .context("could not update frontend with challenge info")?;
-    let body = resp.into_body().read_to_string()?;
+
+    let body: FrontendResolveResponse = resp
+        .into_body()
+        .read_json()
+        .context("got malformed response from frontend")?;
 
     debug!("got response from frontend: {:?}", body);
 
