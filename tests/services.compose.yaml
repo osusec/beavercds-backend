@@ -38,3 +38,29 @@ services:
         /usr/bin/mc anonymous set download myminio/testbucket;
         exit 0;
       "
+
+  mock_frontend:
+    image: nginx:alpine
+    ports:
+      - 8080:80
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cat <<'EOF' > /etc/nginx/conf.d/default.conf
+        server {
+          listen 80;
+          default_type application/json;
+
+          location /api/checkaccess {
+            return 200 '{"status":"ok"}';
+          }
+
+          location /api/resolvestate {
+            limit_except POST {
+              return 200 '{"current":[],"removed":[]}';
+            }
+          }
+        }
+        EOF
+        nginx -g 'daemon off;'
