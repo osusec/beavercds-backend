@@ -379,15 +379,17 @@ fn challenge_pods() {
                 Pod {
                     name: "foo".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 2,
-                    env: ListOrMap::Map(HashMap::new()),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 80,
-                        expose: ExposeType::Http("test.chals.example.com".to_string())
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::new()),
+                        resources: None,
+                        replicas: 2,
+                        ports: vec![PortConfig {
+                            internal: 80,
+                            expose: ExposeType::Http("test.chals.example.com".to_string())
+                        }],
+                        volume: None,
+                    }
                 },
                 Pod {
                     name: "bar".to_string(),
@@ -396,15 +398,17 @@ fn challenge_pods() {
                         dockerfile: "Dockerfile".to_string(),
                         args: HashMap::new()
                     }),
-                    replicas: 1,
-                    env: ListOrMap::Map(HashMap::new()),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 8000,
-                        expose: ExposeType::Tcp(12345)
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::new()),
+                        resources: None,
+                        replicas: 1,
+                        ports: vec![PortConfig {
+                            internal: 8000,
+                            expose: ExposeType::Tcp(12345)
+                        }],
+                        volume: None,
+                    }
                 },
             ]
         );
@@ -466,15 +470,17 @@ fn challenge_pod_build() {
                         dockerfile: "Dockerfile".to_string(),
                         args: HashMap::new()
                     }),
-                    replicas: 1,
-                    env: ListOrMap::Map(HashMap::new()),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 80,
-                        expose: ExposeType::Http("test.chals.example.com".to_string())
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::new()),
+                        resources: None,
+                        replicas: 1,
+                        ports: vec![PortConfig {
+                            internal: 80,
+                            expose: ExposeType::Http("test.chals.example.com".to_string())
+                        }],
+                        volume: None,
+                    }
                 },
                 Pod {
                     name: "bar".to_string(),
@@ -486,15 +492,17 @@ fn challenge_pod_build() {
                             ("BAR".to_string(), "that".to_string()),
                         ])
                     }),
-                    replicas: 1,
-                    env: ListOrMap::Map(HashMap::new()),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 80,
-                        expose: ExposeType::Http("test2.chals.example.com".to_string())
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::new()),
+                        resources: None,
+                        replicas: 1,
+                        ports: vec![PortConfig {
+                            internal: 80,
+                            expose: ExposeType::Http("test2.chals.example.com".to_string())
+                        }],
+                        volume: None,
+                    }
                 }
             ]
         );
@@ -553,34 +561,38 @@ fn challenge_pod_env() {
                     name: "foo".to_string(),
 
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 1,
-                    env: ListOrMap::Map(HashMap::from([
-                        ("FOO".to_string(), "this".to_string()),
-                        ("BAR".to_string(), "that".to_string()),
-                    ])),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 80,
-                        expose: ExposeType::Http("test.chals.example.com".to_string())
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::from([
+                            ("FOO".to_string(), "this".to_string()),
+                            ("BAR".to_string(), "that".to_string()),
+                        ])),
+                        resources: None,
+                        replicas: 1,
+                        ports: vec![PortConfig {
+                            internal: 80,
+                            expose: ExposeType::Http("test.chals.example.com".to_string())
+                        }],
+                        volume: None,
+                    }
                 },
                 Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 1,
-                    env: ListOrMap::Map(HashMap::from([
-                        ("FOO".to_string(), "this".to_string()),
-                        ("BAR".to_string(), "that".to_string()),
-                    ])),
-                    resources: None,
                     architecture: "amd64".to_string(),
-                    ports: vec![PortConfig {
-                        internal: 80,
-                        expose: ExposeType::Http("test2.chals.example.com".to_string())
-                    }],
-                    volume: None
+                    manifest: PodManifestType::Templated {
+                        env: ListOrMap::Map(HashMap::from([
+                            ("FOO".to_string(), "this".to_string()),
+                            ("BAR".to_string(), "that".to_string()),
+                        ])),
+                        resources: None,
+                        replicas: 1,
+                        ports: vec![PortConfig {
+                            internal: 80,
+                            expose: ExposeType::Http("test2.chals.example.com".to_string())
+                        }],
+                        volume: None,
+                    }
                 }
             ]
         );
