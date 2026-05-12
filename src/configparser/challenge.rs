@@ -313,19 +313,30 @@ struct Pod {
     #[serde(flatten)]
     image_source: ImageSource,
 
-    #[serde(default)]
-    env: ListOrMap,
-
     #[serde(default = "default_architecture")]
     architecture: String,
 
-    resources: Option<Resource>,
-    replicas: i64,
-    ports: Vec<PortConfig>,
-    volume: Option<String>,
+    #[serde(flatten)]
+    manifest: PodManifestType,
 }
 fn default_architecture() -> String {
     "amd64".to_string()
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[fully_pub]
+enum PodManifestType {
+    Templated {
+        #[serde(default)]
+        env: ListOrMap,
+        resources: Option<Resource>,
+        replicas: i64,
+        ports: Vec<PortConfig>,
+        volume: Option<String>,
+    },
+    CustomManifest {
+        custom_manifest: String,
+    },
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
