@@ -79,32 +79,34 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
     // coerce pod env lists to maps
     // TODO: do this in serde deserialize?
     for pod in parsed.pods.iter_mut() {
-        pod.env = match pod.env.clone() {
-            ListOrMap::Map(m) => ListOrMap::Map(m),
-            ListOrMap::List(l) => {
-                // split NAME=VALUE list into separate name and value
-                let split: Vec<(String, String)> = l
-                    .into_iter()
-                    .map(|var| {
-                        // error if envvar is malformed
-                        let split = var.splitn(2, '=').collect_vec();
-                        if split.len() == 2 {
-                            Ok((split[0].to_string(), split[1].to_string()))
-                        } else {
-                            Err(anyhow!("Cannot split envvar {var:?}"))
-                        }
-                    })
-                    .collect::<Result<_>>()?;
-                // build hashmap from split name and value iteratively. this
-                // can't use HashMap::from() here since the values are dynamic
-                // and from() only works for Vec constants
-                let map = split
-                    .into_iter()
-                    .fold(Map::new(), |mut map, (name, value)| {
-                        map.insert(name, value);
-                        map
-                    });
-                ListOrMap::Map(map)
+        match &mut pod.manifest {
+            // ignore custom manifest pods, no env to mutate
+            PodManifestType::CustomManifest(_) => continue,
+            PodManifestType::Templated(podinfo) => {
+                podinfo.env = match podinfo.env.clone() {
+                    // keep map-style as-is
+                    ListOrMap::Map(m) => ListOrMap::Map(m),
+                    // convert list-style to map
+                    ListOrMap::List(l) => {
+                        // split NAME=VALUE list into separate name and value
+                        let split: Vec<(String, String)> = l
+                            .iter()
+                            .map(|var| {
+                                // error if envvar is malformed
+                                let split = var.splitn(2, '=').collect_vec();
+                                if split.len() == 2 {
+                                    Ok((split[0].to_string(), split[1].to_string()))
+                                } else {
+                                    Err(anyhow!("Cannot split envvar {var:?}"))
+                                }
+                            })
+                            .try_collect()?;
+
+                        let map = Map::from_iter(split);
+
+                        ListOrMap::Map(map)
+                    }
+                };
             }
         }
     }
@@ -324,19 +326,28 @@ fn default_architecture() -> String {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 #[fully_pub]
 enum PodManifestType {
-    Templated {
-        #[serde(default)]
-        env: ListOrMap,
-        resources: Option<Resource>,
-        replicas: i64,
-        ports: Vec<PortConfig>,
-        volume: Option<String>,
-    },
-    CustomManifest {
-        custom_manifest: String,
-    },
+    Templated(PodTemplateInfo),
+    CustomManifest(PodCustomManifest),
+}
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[fully_pub]
+struct PodTemplateInfo {
+    #[serde(default)]
+    env: ListOrMap,
+    resources: Option<Resource>,
+    replicas: i64,
+    ports: Vec<PortConfig>,
+    volume: Option<String>,
+}
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[fully_pub]
+struct PodCustomManifest {
+    manifest: PathBuf,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
