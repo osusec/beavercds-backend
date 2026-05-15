@@ -1,9 +1,9 @@
 use figment::Jail;
-use std::collections::HashMap;
-use std::path::PathBuf;
-
 #[cfg(test)]
 use pretty_assertions::{assert_eq, assert_ne};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::configparser::challenge::*;
 
@@ -380,7 +380,7 @@ fn challenge_pods() {
                     name: "foo".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::new()),
                         resources: None,
                         replicas: 2,
@@ -389,7 +389,7 @@ fn challenge_pods() {
                             expose: ExposeType::Http("test.chals.example.com".to_string())
                         }],
                         volume: None,
-                    }
+                    })
                 },
                 Pod {
                     name: "bar".to_string(),
@@ -399,7 +399,7 @@ fn challenge_pods() {
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::new()),
                         resources: None,
                         replicas: 1,
@@ -408,7 +408,7 @@ fn challenge_pods() {
                             expose: ExposeType::Tcp(12345)
                         }],
                         volume: None,
-                    }
+                    })
                 },
             ]
         );
@@ -471,7 +471,7 @@ fn challenge_pod_build() {
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::new()),
                         resources: None,
                         replicas: 1,
@@ -480,7 +480,7 @@ fn challenge_pod_build() {
                             expose: ExposeType::Http("test.chals.example.com".to_string())
                         }],
                         volume: None,
-                    }
+                    })
                 },
                 Pod {
                     name: "bar".to_string(),
@@ -493,7 +493,7 @@ fn challenge_pod_build() {
                         ])
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::new()),
                         resources: None,
                         replicas: 1,
@@ -502,7 +502,7 @@ fn challenge_pod_build() {
                             expose: ExposeType::Http("test2.chals.example.com".to_string())
                         }],
                         volume: None,
-                    }
+                    })
                 }
             ]
         );
@@ -562,7 +562,7 @@ fn challenge_pod_env() {
 
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::from([
                             ("FOO".to_string(), "this".to_string()),
                             ("BAR".to_string(), "that".to_string()),
@@ -574,13 +574,13 @@ fn challenge_pod_env() {
                             expose: ExposeType::Http("test.chals.example.com".to_string())
                         }],
                         volume: None,
-                    }
+                    })
                 },
                 Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated {
+                    manifest: PodManifestType::Templated(PodTemplateInfo {
                         env: ListOrMap::Map(HashMap::from([
                             ("FOO".to_string(), "this".to_string()),
                             ("BAR".to_string(), "that".to_string()),
@@ -592,7 +592,7 @@ fn challenge_pod_env() {
                             expose: ExposeType::Http("test2.chals.example.com".to_string())
                         }],
                         volume: None,
-                    }
+                    })
                 }
             ]
         );
@@ -632,6 +632,93 @@ fn challenge_pod_bad_env() {
 
         let chals = parse_all();
         assert!(chals.is_err());
+
+        let errs = chals.unwrap_err();
+        assert_eq!(errs.len(), 1);
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can provide custom manifest yaml instead of our template
+fn challenge_pod_custom_manifest() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  build: .
+                  manifest: manifests/custom.yaml
+        "#,
+        )?;
+
+        let chals_raw = parse_all();
+        assert!(chals_raw.is_ok());
+
+        let chals = chals_raw.unwrap();
+
+        assert_eq!(
+            chals[0].pods,
+            vec![Pod {
+                name: "foo".to_string(),
+                image_source: ImageSource::Build(BuildObject {
+                    context: ".".to_string(),
+                    dockerfile: "Dockerfile".to_string(),
+                    args: HashMap::new()
+                }),
+                architecture: "amd64".to_string(),
+                manifest: PodManifestType::CustomManifest(PodCustomManifest {
+                    manifest: "manifests/custom.yaml".into()
+                })
+            },]
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can't have both manifest and template info
+fn challenge_pod_bad_manifest() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  build: .
+                  manifest: manifests/custom.yaml
+                  replicas: 1
+                  ports:
+                    - internal: 80
+                      expose:
+                        http: test.chals.example.com
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+
         let errs = chals.unwrap_err();
         assert_eq!(errs.len(), 1);
 
