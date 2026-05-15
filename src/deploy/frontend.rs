@@ -127,7 +127,7 @@ fn chal_domain(chal: &ChallengeConfig, chal_domain: &str) -> String {
         .iter()
         // find first non-custom-manifest pod
         .filter_map(|pod| match &pod.manifest {
-            PodManifestType::Templated { ports, .. } => Some(ports),
+            PodManifestType::Templated(info) => Some(&info.ports),
             PodManifestType::CustomManifest { .. } => None,
         })
         // with expose config
@@ -156,8 +156,8 @@ fn chal_port(chal: &ChallengeConfig) -> &i64 {
         .iter()
         // find first non-custom-manifest pod
         .filter_map(|pod| match &pod.manifest {
-            PodManifestType::Templated { ports, .. } => Some(ports),
-            PodManifestType::CustomManifest { .. } => None,
+            PodManifestType::Templated(info) => Some(&info.ports),
+            PodManifestType::CustomManifest(_) => None,
         })
         // with expose config
         .find_map(|ports| ports.first());
