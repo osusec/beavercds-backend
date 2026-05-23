@@ -44,7 +44,7 @@ duct = "0.13.7"
 fastrand = "2.3.0"
 base64ct = { version = "1.7.3", features = ["alloc"] }
 docker_credential = "1.3.2"
-ureq = { version = "3.1.4", features = ["json"] }
+ureq = { version = "3.1.4", features = ["json", "platform-verifier"] }
 
 
 [dev-dependencies]

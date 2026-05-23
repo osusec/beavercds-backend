@@ -6,7 +6,8 @@ use anyhow::{anyhow, bail, Context, Error, Ok, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, trace, warn};
-use ureq;
+use ureq::tls::{RootCerts, TlsConfig};
+use ureq::Agent;
 
 use crate::builder::BuildResult;
 use crate::configparser::challenge::{ExposeType, FlagType};
@@ -45,7 +46,17 @@ pub async fn update_frontend(
 ) -> Result<FrontendResolveResponse> {
     let profile = get_profile_config(profile_name)?;
 
-    let resp = ureq::post(format!("{}/api/resolvestate", profile.frontend_url))
+    let agent = Agent::config_builder()
+        .tls_config(
+            TlsConfig::builder()
+                .root_certs(RootCerts::PlatformVerifier)
+                .build(),
+        )
+        .build()
+        .new_agent();
+
+    let resp = agent
+        .post(format!("{}/api/resolvestate", profile.frontend_url))
         .header("Authorization", format!("Token {}", profile.frontend_token))
         .send_json(chal_infos)
         .context("could not update frontend with challenge info")?;
