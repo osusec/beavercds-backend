@@ -331,6 +331,7 @@ enum PodType {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
+#[serde(deny_unknown_fields)]
 /// Pod using our standard deployment template.
 struct Pod {
     name: String,
@@ -349,8 +350,10 @@ struct Pod {
     volume: Option<String>,
 }
 
+#[serde_nested]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
+#[serde(deny_unknown_fields)]
 /// Pod providing its own custom manifest to apply instead of our template.
 /// Identified by the presence of the `manifest` field (and absence of `replicas`/`ports`).
 struct Manifest {
@@ -358,6 +361,7 @@ struct Manifest {
 
     // Custom manifest may have a `build` item for building a custom image, but
     // not `image` as that would be specified in the manifest directly.
+    #[serde_nested(sub = "BuildObject", serde(deserialize_with = "string_or_struct"))]
     build: Option<BuildObject>,
 
     #[serde(default = "default_architecture")]

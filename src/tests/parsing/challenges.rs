@@ -188,7 +188,7 @@ fn challenge_no_provides_or_pods() {
         let chals = parse_all().unwrap();
 
         assert_eq!(chals[0].provide, vec![] as Vec<ProvideConfig>);
-        assert_eq!(chals[0].pods, vec![] as Vec<Pod>);
+        assert_eq!(chals[0].pods, vec![] as Vec<PodType>);
 
         Ok(())
     })
@@ -376,22 +376,20 @@ fn challenge_pods() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::new()),
-                        resources: None,
-                        replicas: 2,
-                        ports: vec![PortConfig {
-                            internal: 80,
-                            expose: ExposeType::Http("test.chals.example.com".to_string())
-                        }],
-                        volume: None,
-                    })
-                },
-                Pod {
+                    env: ListOrMap::Map(HashMap::new()),
+                    resources: None,
+                    replicas: 2,
+                    ports: vec![PortConfig {
+                        internal: 80,
+                        expose: ExposeType::Http("test.chals.example.com".to_string())
+                    }],
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Build(BuildObject {
                         context: ".".to_string(),
@@ -399,17 +397,15 @@ fn challenge_pods() {
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::new()),
-                        resources: None,
-                        replicas: 1,
-                        ports: vec![PortConfig {
-                            internal: 8000,
-                            expose: ExposeType::Tcp(12345)
-                        }],
-                        volume: None,
-                    })
-                },
+                    env: ListOrMap::Map(HashMap::new()),
+                    resources: None,
+                    replicas: 1,
+                    ports: vec![PortConfig {
+                        internal: 8000,
+                        expose: ExposeType::Tcp(12345)
+                    }],
+                    volume: None,
+                },)
             ]
         );
 
@@ -462,27 +458,24 @@ fn challenge_pod_build() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
-
                     image_source: ImageSource::Build(BuildObject {
                         context: ".".to_string(),
                         dockerfile: "Dockerfile".to_string(),
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::new()),
-                        resources: None,
-                        replicas: 1,
-                        ports: vec![PortConfig {
-                            internal: 80,
-                            expose: ExposeType::Http("test.chals.example.com".to_string())
-                        }],
-                        volume: None,
-                    })
-                },
-                Pod {
+                    env: ListOrMap::Map(HashMap::new()),
+                    resources: None,
+                    replicas: 1,
+                    ports: vec![PortConfig {
+                        internal: 80,
+                        expose: ExposeType::Http("test.chals.example.com".to_string())
+                    }],
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Build(BuildObject {
                         context: "image/".to_string(),
@@ -493,17 +486,15 @@ fn challenge_pod_build() {
                         ])
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::new()),
-                        resources: None,
-                        replicas: 1,
-                        ports: vec![PortConfig {
-                            internal: 80,
-                            expose: ExposeType::Http("test2.chals.example.com".to_string())
-                        }],
-                        volume: None,
-                    })
-                }
+                    env: ListOrMap::Map(HashMap::new()),
+                    resources: None,
+                    replicas: 1,
+                    ports: vec![PortConfig {
+                        internal: 80,
+                        expose: ExposeType::Http("test2.chals.example.com".to_string())
+                    }],
+                    volume: None,
+                })
             ]
         );
 
@@ -557,43 +548,38 @@ fn challenge_pod_env() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
-
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::from([
-                            ("FOO".to_string(), "this".to_string()),
-                            ("BAR".to_string(), "that".to_string()),
-                        ])),
-                        resources: None,
-                        replicas: 1,
-                        ports: vec![PortConfig {
-                            internal: 80,
-                            expose: ExposeType::Http("test.chals.example.com".to_string())
-                        }],
-                        volume: None,
-                    })
-                },
-                Pod {
+                    env: ListOrMap::Map(HashMap::from([
+                        ("FOO".to_string(), "this".to_string()),
+                        ("BAR".to_string(), "that".to_string()),
+                    ])),
+                    resources: None,
+                    replicas: 1,
+                    ports: vec![PortConfig {
+                        internal: 80,
+                        expose: ExposeType::Http("test.chals.example.com".to_string())
+                    }],
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
                     architecture: "amd64".to_string(),
-                    manifest: PodManifestType::Templated(PodTemplateInfo {
-                        env: ListOrMap::Map(HashMap::from([
-                            ("FOO".to_string(), "this".to_string()),
-                            ("BAR".to_string(), "that".to_string()),
-                        ])),
-                        resources: None,
-                        replicas: 1,
-                        ports: vec![PortConfig {
-                            internal: 80,
-                            expose: ExposeType::Http("test2.chals.example.com".to_string())
-                        }],
-                        volume: None,
-                    })
-                }
+                    env: ListOrMap::Map(HashMap::from([
+                        ("FOO".to_string(), "this".to_string()),
+                        ("BAR".to_string(), "that".to_string()),
+                    ])),
+                    resources: None,
+                    replicas: 1,
+                    ports: vec![PortConfig {
+                        internal: 80,
+                        expose: ExposeType::Http("test2.chals.example.com".to_string())
+                    }],
+                    volume: None,
+                })
             ]
         );
 
@@ -670,18 +656,16 @@ fn challenge_pod_custom_manifest() {
 
         assert_eq!(
             chals[0].pods,
-            vec![Pod {
+            vec![PodType::Manifest(Manifest {
                 name: "foo".to_string(),
-                image_source: ImageSource::Build(BuildObject {
+                build: Some(BuildObject {
                     context: ".".to_string(),
                     dockerfile: "Dockerfile".to_string(),
                     args: HashMap::new()
                 }),
                 architecture: "amd64".to_string(),
-                manifest: PodManifestType::CustomManifest(PodCustomManifest {
-                    manifest: "manifests/custom.yaml".into()
-                })
-            },]
+                manifest: "manifests/custom.yaml".into()
+            }),]
         );
 
         Ok(())
