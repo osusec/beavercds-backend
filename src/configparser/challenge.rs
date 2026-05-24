@@ -4,8 +4,10 @@ use figment::Figment;
 use fully_pub::fully_pub;
 use glob::glob;
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
-use serde_nested_with::serde_nested;
+use serde::{Deserialize, Deserializer, Serialize};
+use serde_with::{serde_as, DeserializeAs};
+use std::fmt::Display;
+// use serde_nested_with::serde_nested;
 use std::collections::HashMap as Map;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -13,7 +15,7 @@ use tracing::{debug, error, info, trace, warn};
 use void::Void;
 
 use crate::configparser::config::Resource;
-use crate::configparser::field_coersion::string_or_struct;
+use crate::configparser::field_coersion::{string_or_struct, StringOrStruct};
 use crate::configparser::get_config;
 use crate::utils::render_strict;
 
@@ -118,7 +120,7 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
 // ==== Structs for challenge.yaml parsing ====
 //
 
-#[serde_nested]
+#[serde_as]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[fully_pub]
@@ -169,8 +171,7 @@ pub struct ChallengeConfig {
     flag: FlagType,
 
     #[serde(default)]
-    // map deserialize_with to type in vec
-    #[serde_nested(sub = "ProvideConfig", serde(deserialize_with = "string_or_struct"))]
+    #[serde_as(deserialize_as = "Vec<StringOrStruct>")]
     provide: Vec<ProvideConfig>, // optional if no files provided
 
     #[serde(default)]

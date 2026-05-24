@@ -1,7 +1,8 @@
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use tracing::debug;
-use ureq;
+use ureq::tls::{RootCerts, TlsConfig};
+use ureq::Agent;
 
 use crate::configparser::{get_config, get_profile_config};
 
@@ -17,7 +18,17 @@ pub fn check(profile_name: &str) -> Result<()> {
 
     debug!("checking frontend access at {}", profile.frontend_url);
 
-    let resp = ureq::get(format!("{}/api/checkaccess", profile.frontend_url))
+    let agent = Agent::config_builder()
+        .tls_config(
+            TlsConfig::builder()
+                .root_certs(RootCerts::PlatformVerifier)
+                .build(),
+        )
+        .build()
+        .new_agent();
+
+    let resp = agent
+        .get(format!("{}/api/checkaccess", profile.frontend_url))
         .header("Authorization", format!("Token {}", profile.frontend_token))
         .call()
         .context("could not reach frontend API")?;
