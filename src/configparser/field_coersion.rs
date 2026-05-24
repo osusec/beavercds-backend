@@ -8,7 +8,25 @@ use std::str::FromStr;
 
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
+use serde_with::DeserializeAs;
 use void::Void;
+
+pub struct StringOrStruct;
+
+// Add implementation for DeserializeAs since stock serde(deserialize_with)
+// does not work for nested types, e.g. Vec<CouldBeString> -- use serde_with
+// to work around that which requires this trait impl and not a raw function.
+impl<'de, T> DeserializeAs<'de, T> for StringOrStruct
+where
+    T: Deserialize<'de> + FromStr<Err = Void>,
+{
+    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        string_or_struct(deserializer)
+    }
+}
 
 pub fn string_or_struct<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
