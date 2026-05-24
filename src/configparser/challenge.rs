@@ -15,7 +15,7 @@ use tracing::{debug, error, info, trace, warn};
 use void::Void;
 
 use crate::configparser::config::Resource;
-use crate::configparser::field_coersion::string_or_struct;
+use crate::configparser::field_coersion::{string_or_struct, StringOrStruct};
 use crate::configparser::get_config;
 use crate::utils::render_strict;
 
@@ -119,22 +119,7 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
 //
 // ==== Structs for challenge.yaml parsing ====
 //
-struct StringOrStruct;
 
-// Add implementation for DeserializeAs to avoid needing deserialize_with
-impl<'de, T> DeserializeAs<'de, T> for StringOrStruct
-where
-    T: Deserialize<'de> + FromStr<Err = Void>,
-{
-    fn deserialize_as<D>(deserializer: D) -> Result<T, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        string_or_struct(deserializer)
-    }
-}
-
-// #[serde_nested]
 #[serde_as]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
