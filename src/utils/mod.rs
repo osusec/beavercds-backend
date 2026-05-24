@@ -10,6 +10,7 @@ pub trait TryJoinAll: IntoIterator
 where
     Self::Item: TryFuture,
 {
+    /// futures::try_join_all() as a iterator chain method
     async fn try_join_all(
         self,
     ) -> Result<Vec<<Self::Item as TryFuture>::Ok>, <Self::Item as TryFuture>::Error>;

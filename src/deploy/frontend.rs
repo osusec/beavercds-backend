@@ -7,7 +7,7 @@ use itertools::Itertools;
 use tracing::{debug, error, info, trace, warn};
 
 use crate::builder::BuildResult;
-use crate::configparser::challenge::{ExposeType, FlagType, PodManifestType};
+use crate::configparser::challenge::{ExposeType, FlagType, PodType};
 use crate::configparser::config::ProfileConfig;
 use crate::configparser::{enabled_challenges, get_config, get_profile_config, ChallengeConfig};
 use crate::utils::render_strict;
@@ -126,9 +126,9 @@ fn chal_domain(chal: &ChallengeConfig, chal_domain: &str) -> String {
         .pods
         .iter()
         // find first non-custom-manifest pod
-        .filter_map(|pod| match &pod.manifest {
-            PodManifestType::Templated(info) => Some(&info.ports),
-            PodManifestType::CustomManifest { .. } => None,
+        .filter_map(|pod_type| match &pod_type {
+            PodType::Template(template) => Some(&template.ports),
+            PodType::Manifest(_) => None,
         })
         // with expose config
         .find_map(|ports| ports.first());
@@ -155,9 +155,9 @@ fn chal_port(chal: &ChallengeConfig) -> &i64 {
         .pods
         .iter()
         // find first non-custom-manifest pod
-        .filter_map(|pod| match &pod.manifest {
-            PodManifestType::Templated(info) => Some(&info.ports),
-            PodManifestType::CustomManifest(_) => None,
+        .filter_map(|pod_type| match &pod_type {
+            PodType::Template(template) => Some(&template.ports),
+            PodType::Manifest(_) => None,
         })
         // with expose config
         .find_map(|ports| ports.first());

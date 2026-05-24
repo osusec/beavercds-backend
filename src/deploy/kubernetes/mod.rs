@@ -11,7 +11,7 @@ use tracing::{debug, error, info, trace, warn};
 
 use crate::builder::BuildResult;
 use crate::clients::{apply_manifest_yaml, kube_client, wait_for_status};
-use crate::configparser::challenge::{ExposeType, Pod, PodManifestType, PodTemplateInfo};
+use crate::configparser::challenge::{ExposeType, Manifest, Pod, PodType};
 use crate::configparser::config::ProfileConfig;
 use crate::configparser::{get_config, get_profile_config, ChallengeConfig};
 use crate::utils::{render_strict, TryJoinAll};
@@ -88,26 +88,38 @@ pub async fn apply_challenge_resources(
 
     let results = KubeDeployResult { exposed: vec![] };
 
-    for pod in &chal.pods {
-        match &pod.manifest {
-            PodManifestType::Templated(info) => {
-                deploy_template_pod(chal, profile_name, pod, info).await?
+    let _ = &chal
+        .pods
+        .iter()
+        .map(|pod_type| async {
+            match pod_type {
+                PodType::Template(pod) => deploy_template_pod(chal, profile_name, pod)
+                    .await
+                    .with_context(|| {
+                        format!(
+                            "failed to deploy kube resources for challenge {:?} pod {:?}",
+                            chal.slugify_slash(),
+                            pod.name
+                        )
+                    }),
+                PodType::Manifest(manifest) => deploy_custom_manifest(chal, profile_name, manifest)
+                    .await
+                    .with_context(|| {
+                        format!(
+                            "failed to deploy manifest for challenge {:?} pod {:?}",
+                            chal.slugify_slash(),
+                            manifest.name
+                        )
+                    }),
             }
-            PodManifestType::CustomManifest(manifest_path) => {
-                deploy_custom_manifest(chal, profile_name, pod, &manifest_path.manifest).await?
-            }
-        }
-    }
+        })
+        .try_join_all()
+        .await?;
 
     Ok(results)
 }
 
-async fn deploy_template_pod(
-    chal: &ChallengeConfig,
-    profile_name: &str,
-    pod: &Pod,
-    info: &PodTemplateInfo,
-) -> Result<()> {
+async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &Pod) -> Result<()> {
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;
 
@@ -121,10 +133,9 @@ async fn deploy_template_pod(
     )?;
     trace!("DEPLOYMENT:\n{}", depl_manifest);
 
-    trace!(
+    debug!(
         "applying deployment for chal {:?} pod {:?}",
-        chal.directory,
-        pod.name
+        chal.directory, pod.name
     );
     let depl = apply_manifest_yaml(&kube, &depl_manifest).await?;
     for object in depl {
@@ -147,8 +158,8 @@ async fn deploy_template_pod(
             })?;
     }
 
-    // tcp and http exposes need to he handled separately, so separate them by type
-    let (tcp_ports, http_ports): (Vec<_>, Vec<_>) = info
+    // tcp and http exposes need to be handled separately, so separate them by type
+    let (tcp_ports, http_ports): (Vec<_>, Vec<_>) = pod
         .ports
         .iter()
         .partition(|p| matches!(p.expose, ExposeType::Tcp(_)));
@@ -234,8 +245,7 @@ async fn deploy_template_pod(
 async fn deploy_custom_manifest(
     chal: &ChallengeConfig,
     profile_name: &str,
-    pod: &Pod,
-    manifest_path: &Path,
+    manifest: &Manifest,
 ) -> Result<()> {
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;

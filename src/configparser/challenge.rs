@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use figment::providers::{Env, Format, Serialized, Yaml};
 use figment::Figment;
 use fully_pub::fully_pub;
@@ -78,36 +78,33 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
 
     // coerce pod env lists to maps
     // TODO: do this in serde deserialize?
-    for pod in parsed.pods.iter_mut() {
-        match &mut pod.manifest {
-            // ignore custom manifest pods, no env to mutate
-            PodManifestType::CustomManifest(_) => continue,
-            PodManifestType::Templated(podinfo) => {
-                podinfo.env = match podinfo.env.clone() {
-                    // keep map-style as-is
-                    ListOrMap::Map(m) => ListOrMap::Map(m),
-                    // convert list-style to map
-                    ListOrMap::List(l) => {
-                        // split NAME=VALUE list into separate name and value
-                        let split: Vec<(String, String)> = l
-                            .iter()
-                            .map(|var| {
-                                // error if envvar is malformed
-                                let split = var.splitn(2, '=').collect_vec();
-                                if split.len() == 2 {
-                                    Ok((split[0].to_string(), split[1].to_string()))
-                                } else {
-                                    Err(anyhow!("Cannot split envvar {var:?}"))
-                                }
-                            })
-                            .try_collect()?;
+    for pod_type in parsed.pods.iter_mut() {
+        // ignore custom manifest pods, no env to mutate
+        if let PodType::Template(ref mut pod) = pod_type {
+            pod.env = match pod.env.clone() {
+                // keep map-style as-is
+                ListOrMap::Map(m) => ListOrMap::Map(m),
+                // convert list-style to map
+                ListOrMap::List(l) => {
+                    // split NAME=VALUE list into separate name and value
+                    let split: Vec<(String, String)> = l
+                        .iter()
+                        .map(|var| {
+                            // error if envvar is malformed
+                            let split = var.splitn(2, '=').collect_vec();
+                            if split.len() == 2 {
+                                Ok((split[0].to_string(), split[1].to_string()))
+                            } else {
+                                Err(anyhow!("Cannot split envvar {var:?}"))
+                            }
+                        })
+                        .try_collect()?;
 
-                        let map = Map::from_iter(split);
+                    let map = Map::from_iter(split);
 
-                        ListOrMap::Map(map)
-                    }
-                };
-            }
+                    ListOrMap::Map(map)
+                }
+            };
         }
     }
 
@@ -173,20 +170,37 @@ pub struct ChallengeConfig {
     provide: Vec<ProvideConfig>, // optional if no files provided
 
     #[serde(default)]
-    pods: Vec<Pod>, // optional if no containers used
+    pods: Vec<PodType>, // optional if no containers used
 }
 impl ChallengeConfig {
     /// Return the container image tag for the pod; either the upstream image or
     /// the tag to be built if the image is to be built from source.
     pub fn container_tag_for_pod(&self, profile_name: &str, pod_name: &str) -> Result<String> {
         let config = get_config()?;
-        let pod = self
+        let found_pod = self
             .pods
             .iter()
-            .find(|p| p.name == pod_name)
+            .find(|pod_type| match pod_type {
+                PodType::Template(pod) => pod.name == pod_name,
+                PodType::Manifest(manifest) => manifest.name == pod_name,
+            })
             .ok_or(anyhow!("pod {} not found in challenge", pod_name))?;
 
-        match &pod.image_source {
+        let image_source = match found_pod {
+            PodType::Template(pod) => pod.image_source.clone(),
+            PodType::Manifest(manifest) => {
+                if let Some(build) = &manifest.build {
+                    ImageSource::Build(build.clone())
+                } else {
+                    bail!(
+                        "custom manifest pod {} cannot have upstream image type",
+                        pod_name
+                    )
+                }
+            }
+        };
+
+        match image_source {
             ImageSource::Image(t) => Ok(t.to_string()),
             // render image tag template from config
             ImageSource::Build(b) => render_strict(
@@ -194,7 +208,7 @@ impl ChallengeConfig {
                 minijinja::context! {
                     domain => config.registry.domain,
                     challenge => self.slugify(),
-                    container => pod.name,
+                    container => pod_name,
                     profile => profile_name
                 },
             )
@@ -309,6 +323,15 @@ impl FromStr for ProvideConfig {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
+#[serde(untagged)]
+enum PodType {
+    Template(Pod),
+    Manifest(Manifest),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[fully_pub]
+/// Pod using our standard deployment template.
 struct Pod {
     name: String,
 
@@ -318,24 +341,6 @@ struct Pod {
     #[serde(default = "default_architecture")]
     architecture: String,
 
-    #[serde(flatten)]
-    manifest: PodManifestType,
-}
-fn default_architecture() -> String {
-    "amd64".to_string()
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-#[fully_pub]
-enum PodManifestType {
-    Templated(PodTemplateInfo),
-    CustomManifest(PodCustomManifest),
-}
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[fully_pub]
-struct PodTemplateInfo {
     #[serde(default)]
     env: ListOrMap,
     resources: Option<Resource>,
@@ -343,14 +348,29 @@ struct PodTemplateInfo {
     ports: Vec<PortConfig>,
     volume: Option<String>,
 }
+
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 #[fully_pub]
-struct PodCustomManifest {
+/// Pod providing its own custom manifest to apply instead of our template.
+/// Identified by the presence of the `manifest` field (and absence of `replicas`/`ports`).
+struct Manifest {
+    name: String,
+
+    // Custom manifest may have a `build` item for building a custom image, but
+    // not `image` as that would be specified in the manifest directly.
+    build: Option<BuildObject>,
+
+    #[serde(default = "default_architecture")]
+    architecture: String,
+
     manifest: PathBuf,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+fn default_architecture() -> String {
+    "amd64".to_string()
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[fully_pub]
 enum ImageSource {
@@ -359,7 +379,7 @@ enum ImageSource {
     Image(String),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
 struct BuildObject {
     context: String,

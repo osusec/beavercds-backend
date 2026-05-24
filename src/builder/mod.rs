@@ -11,8 +11,11 @@ use std::iter::zip;
 use std::path::{Path, PathBuf};
 use tracing::{debug, error, info, trace, warn};
 
+use crate::configparser::challenge::PodType;
 use crate::configparser::challenge::{
-    BuildObject, ChallengeConfig, ImageSource::*, Pod, ProvideConfig,
+    BuildObject, ChallengeConfig,
+    ImageSource::{self, *},
+    Pod, ProvideConfig,
 };
 use crate::configparser::{enabled_challenges, get_config};
 use crate::utils::TryJoinAll;
@@ -73,26 +76,23 @@ async fn build_challenge(
     built.tags = chal
         .pods
         .iter()
-        .map(|p| async {
-            match &p.image_source {
-                Image(tag) => Ok(TagWithSource::Upstream(tag.to_string())),
-                // build any pods that need building
-                Build(build) => {
-                    let tag = chal.container_tag_for_pod(profile_name, &p.name)?;
-
-                    let res = docker::build_image(&chal.directory, build, &tag, &p.architecture)
-                        .await
-                        .with_context(|| {
-                            format!(
-                                "error building image {} for chal {}",
-                                p.name,
-                                chal.directory.to_string_lossy()
-                            )
-                        });
-                    // map result tag string into enum
-                    res.map(TagWithSource::Built)
-                }
-            }
+        .filter_map(|pod_type| match pod_type {
+            PodType::Template(pod) => Some(build_image_source(
+                chal,
+                profile_name,
+                &pod.name,
+                &pod.architecture,
+                pod.image_source.clone(),
+            )),
+            PodType::Manifest(manifest) => manifest.build.as_ref().map(|b| {
+                build_image_source(
+                    chal,
+                    profile_name,
+                    &manifest.name,
+                    &manifest.architecture,
+                    ImageSource::Build(b.clone()),
+                )
+            }),
         })
         .try_join_all()
         .await?;
@@ -154,4 +154,34 @@ async fn build_challenge(
     }
 
     Ok(built)
+}
+
+// breakout fn closure to make the matches easier
+async fn build_image_source(
+    chal: &ChallengeConfig,
+    profile_name: &str,
+    name: &str,
+    arch: &str,
+    image_source: ImageSource, //
+) -> Result<TagWithSource> {
+    match image_source {
+        Image(tag) => Ok(TagWithSource::Upstream(tag.to_string())),
+        // build any pods that need building
+        Build(build) => {
+            let tag = chal.container_tag_for_pod(profile_name, name)?;
+
+            let res = docker::build_image(&chal.directory, &build, &tag, arch)
+                .await
+                .with_context(|| {
+                    format!(
+                        "error building image {} for chal {}",
+                        &name,
+                        chal.directory.to_string_lossy()
+                    )
+                });
+
+            // map result tag string into enum
+            res.map(TagWithSource::Built)
+        }
+    }
 }
