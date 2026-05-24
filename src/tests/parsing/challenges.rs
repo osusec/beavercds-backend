@@ -644,7 +644,6 @@ fn challenge_pod_custom_manifest() {
 
             pods:
                 - name: foo
-                  build: .
                   manifest: manifests/custom.yaml
         "#,
         )?;
@@ -658,14 +657,73 @@ fn challenge_pod_custom_manifest() {
             chals[0].pods,
             vec![PodType::Manifest(Manifest {
                 name: "foo".to_string(),
-                build: Some(BuildObject {
-                    context: ".".to_string(),
-                    dockerfile: "Dockerfile".to_string(),
-                    args: HashMap::new()
-                }),
+                build: None,
                 architecture: "amd64".to_string(),
                 manifest: "manifests/custom.yaml".into()
             }),]
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can provide custom manifest yaml with image build
+fn challenge_pod_custom_manifest_build() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  build: .
+                  manifest: manifests/custom.yaml
+                - name: bar
+                  build:
+                    context: src/
+                    dockerfile: Containerfile
+                  manifest: manifests/asdf.yaml
+        "#,
+        )?;
+
+        let chals_raw = parse_all();
+        assert!(chals_raw.is_ok());
+
+        let chals = chals_raw.unwrap();
+
+        assert_eq!(
+            chals[0].pods,
+            vec![
+                PodType::Manifest(Manifest {
+                    name: "foo".to_string(),
+                    build: Some(BuildObject {
+                        context: ".".to_string(),
+                        dockerfile: "Dockerfile".to_string(),
+                        args: HashMap::new()
+                    }),
+                    architecture: "amd64".to_string(),
+                    manifest: "manifests/custom.yaml".into()
+                }),
+                PodType::Manifest(Manifest {
+                    name: "bar".to_string(),
+                    build: Some(BuildObject {
+                        context: "src/".to_string(),
+                        dockerfile: "Containerfile".to_string(),
+                        args: HashMap::new()
+                    }),
+                    architecture: "amd64".to_string(),
+                    manifest: "manifests/asdf.yaml".into()
+                }),
+            ]
         );
 
         Ok(())
@@ -697,6 +755,39 @@ fn challenge_pod_bad_manifest() {
                     - internal: 80
                       expose:
                         http: test.chals.example.com
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+
+        let errs = chals.unwrap_err();
+        assert_eq!(errs.len(), 1);
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can't have both manifest and image
+fn challenge_pod_bad_manifest_image() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  image: nginx:alpine
+                  manifest: manifests/custom.yaml
         "#,
         )?;
 

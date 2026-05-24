@@ -350,7 +350,7 @@ struct Pod {
     volume: Option<String>,
 }
 
-#[serde_nested]
+#[serde_as]
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[fully_pub]
 #[serde(deny_unknown_fields)]
@@ -361,7 +361,7 @@ struct Manifest {
 
     // Custom manifest may have a `build` item for building a custom image, but
     // not `image` as that would be specified in the manifest directly.
-    #[serde_nested(sub = "BuildObject", serde(deserialize_with = "string_or_struct"))]
+    #[serde_as(deserialize_as = "Option<StringOrStruct>")]
     build: Option<BuildObject>,
 
     #[serde(default = "default_architecture")]
