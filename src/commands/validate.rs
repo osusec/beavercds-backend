@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use itertools::Itertools;
 use std::path::Path;
 use std::process::exit;
 use tracing::{debug, error, info, trace, warn};
@@ -43,17 +44,17 @@ pub fn run() -> Result<()> {
     info!("validating deploy config...");
     for (profile_name, _pconfig) in config.profiles.iter() {
         // fetch from config
-        let deploy_challenges = get_profile_deploy(profile_name)?;
+        let deploy_challenges = &get_profile_deploy(profile_name)?.challenges;
+        let chal_slugs = chals.iter().map(|c| c.slugify_slash()).collect_vec();
 
-        // check for missing
-        let missing: Vec<_> = deploy_challenges
-            .challenges
+        // check for chals defined in deploy: but don't exist in repo
+        let missing = deploy_challenges
             .keys()
             .filter(
                 // try to find any challenge paths in deploy config that do not exist
                 |path| !chals.iter().any(|c| c.directory == Path::new(path)),
             )
-            .collect();
+            .collect_vec();
 
         // TODO: figure out how to return this error directly
         if !missing.is_empty() {
@@ -62,6 +63,17 @@ pub fn run() -> Result<()> {
             );
             missing.iter().for_each(|path| error!("  - {path}"));
             bail!("failed to validate deploy config");
+        }
+
+        // check for challenges found but not mentioned in deploy config
+        let extra = chal_slugs
+            .iter()
+            .filter(|c| !deploy_challenges.contains_key(c.to_owned()))
+            .collect_vec();
+
+        if !extra.is_empty() {
+            warn!("deploy settings for profile '{profile_name}' is missing challenges:");
+            extra.iter().for_each(|path| warn!("  - {path}"));
         }
     }
     info!("  deploy ok!");
