@@ -40,7 +40,6 @@ start_stuff (){
   $(dockpod) network connect k3d-beavercds tests-registry-server-1
 
   # export variables if sourced or echo them if run
-  export BEAVERCDS_REGISTRY_DOMAIN="localhost:5000/testing"
   export BEAVERCDS_PROFILES_TESTING_KUBECONTEXT="k3d-$CLUSTER_NAME"
   export BEAVERCDS_PROFILES_TESTING_S3_ENDPOINT="http://localhost:9000"
   export BEAVERCDS_PROFILES_TESTING_S3_REGION=""

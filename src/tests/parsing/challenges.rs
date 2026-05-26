@@ -13,6 +13,8 @@ const VALID_CHAL: &str = r#"
     description: just a test challenge
     point_class: example
 
+    challenge_id: asdf
+
     flag:
         text: test{it-works}
 
@@ -87,6 +89,7 @@ fn challenge_two_levels() {
 
                 category: "foo".to_string(),
                 directory: PathBuf::from("foo/test"),
+                challenge_id: "asdf".to_string(),
 
                 flag: FlagType::Text {
                     text: "test{it-works}".to_string()
@@ -118,7 +121,7 @@ fn challenge_three_levels() {
 }
 
 #[test]
-fn challenge_missing_fields() {
+fn challenge_no_flag() {
     figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/noflag")?;
         jail.create_file(
@@ -128,9 +131,27 @@ fn challenge_missing_fields() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
         "#,
         )?;
 
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noflag/challenge.yaml": missing field `flag`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_author() {
+    figment::Jail::expect_with(|jail| {
         let dir = jail.create_dir("test/noauthor")?;
         jail.create_file(
             dir.join("challenge.yaml"),
@@ -138,19 +159,7 @@ fn challenge_missing_fields() {
             name: testchal
             description: just a test challenge
             point_class: example
-
-            flag:
-                text: test{asdf}
-        "#,
-        )?;
-
-        let dir = jail.create_dir("test/nodescrip")?;
-        jail.create_file(
-            dir.join("challenge.yaml"),
-            r#"
-            name: testchal
-            author: nobody
-            point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{asdf}
@@ -161,7 +170,72 @@ fn challenge_missing_fields() {
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
 
-        assert_eq!(errs.len(), 3);
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noauthor/challenge.yaml": missing field `author`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_description() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("test/nodescrip")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            point_class: example
+            challenge_id: asdf
+
+            flag:
+                text: test{asdf}
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/nodescrip/challenge.yaml": missing field `description`"#
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn challenge_no_id() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("test/noid")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+
+            flag:
+                text: test{asdf}
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+        let errs = chals.unwrap_err();
+
+        assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "test/noid/challenge.yaml": missing field `challenge_id`"#
+        );
 
         Ok(())
     })
@@ -179,6 +253,7 @@ fn challenge_no_provides_or_pods() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -205,6 +280,8 @@ fn challenge_no_point_class() {
             name: testchal
             author: nobody
             description: just a test challenge
+            # point_class:
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -231,6 +308,7 @@ fn challenge_provide() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -318,6 +396,7 @@ fn challenge_provide_no_include() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -330,7 +409,13 @@ fn challenge_provide_no_include() {
         let chals = parse_all();
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
+
         assert_eq!(errs.len(), 1);
+        // TODO: fix this really bad error message!
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "foo/test/challenge.yaml": data did not match any variant of untagged enum ProvideConfig for key "default.provide.0" in foo/test/challenge.yaml YAML file"#
+        );
 
         Ok(())
     })
@@ -348,6 +433,7 @@ fn challenge_pods() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -425,6 +511,7 @@ fn challenge_pod_build() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -515,6 +602,7 @@ fn challenge_pod_env() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -601,6 +689,7 @@ fn challenge_pod_bad_env() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -621,7 +710,12 @@ fn challenge_pod_bad_env() {
         let chals = parse_all();
         assert!(chals.is_err());
         let errs = chals.unwrap_err();
+
         assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "foo/test/challenge.yaml": could not parse envvar=value from "FOO" (missing '='?)"#
+        );
 
         Ok(())
     })

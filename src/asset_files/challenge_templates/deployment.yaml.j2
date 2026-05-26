@@ -28,7 +28,7 @@ spec:
           image: "{{ pod_image }}"
           imagePullPolicy: Always
           ports:
-            {% for p in pod.ports -%}
+            {% for p in pod.ports | unique(attribute="internal") %}
             - containerPort: {{ p.internal }}
             {%- else %}
             []
@@ -36,7 +36,7 @@ spec:
 
           {% if pod.env -%}
           env:
-            {% for k, v in pod.env -%}
+            {% for k, v in pod.env | items %}
             - { name: "{{ k }}", value: "{{ v }}" }
             {%- else %}
             []

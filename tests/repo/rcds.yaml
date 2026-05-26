@@ -20,12 +20,16 @@ point_classes:
     min: 100
     max: 1337
   - name: "simple"
-    min: 100
-    max: 500
+    min: 50
+    max: 100
+  - name: "survey"
+    min: 1
+    max: 1
 
 deploy:
   # control challenge deployment status explicitly per environment/profile
   testing:
+    misc/survey: true
     misc/garf: true
     pwn/notsh: true
     web/bar: true
@@ -33,7 +37,7 @@ deploy:
 profiles:
   # configure per-environment credentials etc
   testing:
-    frontend_url: https://frontend.example
+    frontend_url: https://httpbin.org/anything
     frontend_token: secretsecretsecret
     challenges_domain: chals.frontend.example
     kubecontext: testcluster

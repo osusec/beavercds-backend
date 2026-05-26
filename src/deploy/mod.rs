@@ -116,35 +116,32 @@ pub async fn check_setup(profile: &ProfileConfig) -> Result<()> {
 pub async fn deploy_challenges(
     profile_name: &str,
     build_results: &[(&ChallengeConfig, BuildResult)],
-) -> Result<Vec<()>> {
-    let profile = get_profile_config(profile_name)?;
-
-    let mut md_file = File::create(format!("challenge-info-{profile_name}.md"))?;
-    md_file.write_all(b"# Challenge Information\n\n")?;
-    let md_lock = std::sync::Mutex::new(md_file);
-
-    build_results
+) -> Result<()> {
+    let chal_infos = build_results
         .iter()
         .map(|(chal, build)| async {
-            let chal_md = deploy_single_challenge(profile_name, chal, build)
+            deploy_single_challenge(profile_name, chal, build)
                 .await
-                .with_context(|| format!("could not deploy challenge {:?}", chal.directory))?;
-
-            debug!("writing chal {:?} info to file", chal.directory);
-            md_lock.lock().unwrap().write_all(chal_md.as_bytes())?;
-
-            Ok(())
+                .with_context(|| format!("could not deploy challenge {:?}", chal.directory))
         })
         .try_join_all()
-        .await
+        .await?;
+
+    debug!("collected challenge info: {:#?}", chal_infos);
+
+    // now update frontend with that info
+    frontend::update_frontend(profile_name, &chal_infos).await?;
+
+    Ok(())
 }
 
-/// Deploy / upload all components of a single challenge.
+/// Deploy / upload all components of a single challenge. Returns a single
+/// struct of challenge info in the format that frontend wants.
 async fn deploy_single_challenge(
     profile_name: &str,
     chal: &ChallengeConfig,
     build_result: &BuildResult,
-) -> Result<String> {
+) -> Result<frontend::FrontendChalData> {
     info!("  deploying chal {:?}...", chal.directory);
     // deploy needs to:
     // A) render kubernetes manifests
@@ -160,7 +157,7 @@ async fn deploy_single_challenge(
     let s3_urls = s3::upload_challenge_assets(profile_name, chal, build_result).await?;
 
     let frontend_info =
-        frontend::update_frontend(profile_name, chal, build_result, &kube_results, &s3_urls)
+        frontend::render_frontend_info(profile_name, chal, build_result, &kube_results, &s3_urls)
             .await?;
 
     Ok(frontend_info)

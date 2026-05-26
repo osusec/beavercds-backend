@@ -11,7 +11,7 @@ use tracing::{debug, error, info, trace, warn};
 
 use crate::builder::BuildResult;
 use crate::clients::{apply_manifest_yaml, kube_client, wait_for_status};
-use crate::configparser::challenge::ExposeType;
+use crate::configparser::challenge::{ExposeType, Pod};
 use crate::configparser::config::ProfileConfig;
 use crate::configparser::{get_config, get_profile_config, ChallengeConfig};
 use crate::utils::{render_strict, TryJoinAll};
@@ -21,12 +21,7 @@ pub mod templates;
 /// How and where a challenge was deployed/exposed at
 pub struct KubeDeployResult {
     // challenges could have multiple exposed services
-    pub exposed: Vec<PodDeployResult>,
-}
-
-pub enum PodDeployResult {
-    Http { domain: String },
-    Tcp { port: usize },
+    pub exposed: Vec<ExposeType>,
 }
 
 // Deploy all K8S resources for a single challenge `chal`.
@@ -86,9 +81,10 @@ pub async fn apply_challenge_resources(
 
     // namespace boilerplate over, deploy actual challenge pods
 
-    let results = KubeDeployResult { exposed: vec![] };
+    let mut results = KubeDeployResult { exposed: vec![] };
 
-    for pod in &chal.pods {
+    // nested function for better error context reporting
+    let mut apply_challenge_pod = async |pod: &Pod| {
         let pod_image = chal.container_tag_for_pod(profile_name, &pod.name)?;
         let depl_manifest = render_strict(
             templates::CHALLENGE_DEPLOYMENT,
@@ -166,8 +162,9 @@ pub async fn apply_challenge_resources(
                     })?;
             }
 
-            // TODO:
-            // expose_results.exposed.push(PodDeployResult::Tcp { port: tcp_ports[0]. });
+            results
+                .exposed
+                .extend(tcp_ports.iter().map(|p| p.expose.to_owned()));
         }
 
         if !http_ports.is_empty() {
@@ -204,7 +201,19 @@ pub async fn apply_challenge_resources(
                         )
                     })?;
             }
+
+            results
+                .exposed
+                .extend(http_ports.iter().map(|p| p.expose.to_owned()));
         }
+
+        Ok(())
+    };
+
+    for pod in &chal.pods {
+        apply_challenge_pod(pod)
+            .await
+            .with_context(|| format!("failed to deploy challenge pod {:?}", pod.name))?;
     }
 
     Ok(results)
