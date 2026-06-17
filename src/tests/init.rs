@@ -1,14 +1,13 @@
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 
-use crate::init::{blank_init, interactive_init, placeholder_init, templatize_init};
+use crate::init::render_config;
 
 #[test]
 /// Config template renders correctly with blank init
 fn blank_init_rendering() {
-    let blank = blank_init();
+    let rendered = render_config(false, false, true);
 
-    let rendered = templatize_init(&blank);
     assert!(rendered.is_ok(), "blank template failed to render");
     assert_eq!(
         rendered.unwrap(),
@@ -58,9 +57,8 @@ profiles:
 #[test]
 /// Config template renders correctly with example values
 fn example_init_rendering() {
-    let examples = placeholder_init();
+    let rendered = render_config(false, true, false);
 
-    let rendered = templatize_init(&examples);
     assert!(rendered.is_ok(), "example template failed to render");
     assert_eq!(
         rendered.unwrap(),
