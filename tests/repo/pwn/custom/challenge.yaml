@@ -1,0 +1,12 @@
+name: custom-decal
+author: Grey Leno
+description: |-
+  checkout this custom skin for nginx :)
+
+  {{ url }}
+
+flag: dam{custom}
+
+pods:
+  - name: main
+    manifest: nginx.manifest.yaml
