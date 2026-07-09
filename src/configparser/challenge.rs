@@ -367,7 +367,8 @@ struct Manifest {
     #[serde(default = "default_architecture")]
     architecture: String,
 
-    manifest: PathBuf,
+    #[serde(rename = "manifest")]
+    manifest_path: PathBuf,
 }
 
 fn default_architecture() -> String {

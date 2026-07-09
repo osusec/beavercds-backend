@@ -659,7 +659,7 @@ fn challenge_pod_custom_manifest() {
                 name: "foo".to_string(),
                 build: None,
                 architecture: "amd64".to_string(),
-                manifest: "manifests/custom.yaml".into()
+                manifest_path: "manifests/custom.yaml".into()
             }),]
         );
 
@@ -711,7 +711,7 @@ fn challenge_pod_custom_manifest_build() {
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: "manifests/custom.yaml".into()
+                    manifest_path: "manifests/custom.yaml".into()
                 }),
                 PodType::Manifest(Manifest {
                     name: "bar".to_string(),
@@ -721,7 +721,7 @@ fn challenge_pod_custom_manifest_build() {
                         args: HashMap::new()
                     }),
                     architecture: "amd64".to_string(),
-                    manifest: "manifests/asdf.yaml".into()
+                    manifest_path: "manifests/asdf.yaml".into()
                 }),
             ]
         );
