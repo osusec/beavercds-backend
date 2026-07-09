@@ -47,9 +47,14 @@ pub async fn apply_challenge_resources(
 
     let kube = kube_client(profile).await?;
 
+    // Deploy our standard namespace regardless of whether challenge pods use
+    // our template or a custom manifest. The custom manifest may set its own
+    // namespace, but this lets us track challenge presence for both types.
+
+    let namespace = format!("rcds-{}", chal.slugify());
     let ns_manifest = render_strict(
         templates::CHALLENGE_NAMESPACE,
-        minijinja::context! { chal, slug => chal.slugify() },
+        minijinja::context! { chal, namespace },
     )?;
     trace!("NAMESPACE:\n{}", ns_manifest);
 
@@ -64,25 +69,8 @@ pub async fn apply_challenge_resources(
         .try_join_all()
         .await?;
 
-    // add image pull credentials to the new namespace
-    debug!(
-        "applying namespace pull credentials for chal {:?}",
-        chal.directory
-    );
-
-    let registry = &get_config()?.registry;
-    let creds_manifest = render_strict(
-        templates::IMAGE_PULL_CREDS_SECRET,
-        minijinja::context! {
-            slug => chal.slugify(),
-            registry_domain => registry.domain,
-            creds_b64 => Base64::encode_string(format!("{}:{}",
-                registry.cluster.user,
-                registry.cluster.pass,
-            ).as_bytes()),
-        },
-    )?;
-    apply_manifest_yaml(&kube, &creds_manifest).await?;
+    // add cluster image pull secrets from config to new namespace
+    deploy_pull_secrets(chal, profile_name, &namespace).await?;
 
     // namespace boilerplate over, deploy actual challenge pods
 
@@ -119,6 +107,40 @@ pub async fn apply_challenge_resources(
     Ok(results)
 }
 
+/// Deploy imagepullsecret from config into given namespace
+async fn deploy_pull_secrets(
+    chal: &ChallengeConfig,
+    profile_name: &str,
+    namespace: &str,
+) -> Result<()> {
+    let profile = get_profile_config(profile_name)?;
+    let kube = kube_client(profile).await?;
+
+    // add image pull credentials to the new namespace
+    debug!(
+        "applying namespace pull credentials for chal {:?}",
+        chal.directory
+    );
+
+    let registry = &get_config()?.registry;
+    let creds_manifest = render_strict(
+        templates::IMAGE_PULL_CREDS_SECRET,
+        minijinja::context! {
+            namespace,
+            slug => chal.slugify(),
+            registry_domain => registry.domain,
+            creds_b64 => Base64::encode_string(format!("{}:{}",
+                registry.cluster.user,
+                registry.cluster.pass,
+            ).as_bytes()),
+        },
+    )?;
+    apply_manifest_yaml(&kube, &creds_manifest).await?;
+
+    Ok(())
+}
+
+/// Deploy challenge pod using our standard pod template
 async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &Pod) -> Result<()> {
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;
