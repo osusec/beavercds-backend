@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -5,12 +7,14 @@ use anyhow::{anyhow, bail, Context, Error, Ok, Result};
 use base64ct::{Base64, Encoding};
 use bollard::auth::DockerCredentials;
 use itertools::Itertools;
+use k8s_openapi::api::core::v1::Namespace;
+use kube::api::DynamicObject;
 use minijinja;
 use tokio::time::timeout;
 use tracing::{debug, error, info, trace, warn};
 
 use crate::builder::BuildResult;
-use crate::clients::{apply_manifest_yaml, kube_client, wait_for_status};
+use crate::clients::{apply_manifest_yaml, kube_client, multidoc_deserialize, wait_for_status};
 use crate::configparser::challenge::{ExposeType, Manifest, Pod, PodType};
 use crate::configparser::config::ProfileConfig;
 use crate::configparser::{get_config, get_profile_config, ChallengeConfig};
@@ -94,9 +98,8 @@ pub async fn apply_challenge_resources(
                     .await
                     .with_context(|| {
                         format!(
-                            "failed to deploy manifest for challenge {:?} pod {:?}",
-                            chal.slugify_slash(),
-                            manifest.name
+                            "failed to deploy custom manifest {:?} for pod {:?}",
+                            manifest.manifest_path, manifest.name
                         )
                     }),
             }
@@ -264,6 +267,11 @@ async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &P
     Ok(())
 }
 
+/// Deploy custom manifest resources for challenge pod
+///
+/// This applies all objects in the given manifest file AS-IS with no
+/// modifications -- with the exception of adding the BCDS registry pull secrets
+/// to any included namespaces.
 async fn deploy_custom_manifest(
     chal: &ChallengeConfig,
     profile_name: &str,
@@ -272,8 +280,40 @@ async fn deploy_custom_manifest(
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;
 
+    // Normalize manifest path, as it is given as relative to the challenge
+    // directory, not the top-level of challenge repo that this works at
+    let full_path = chal.directory.join(&manifest.manifest_path);
+    full_path
+        .canonicalize()
+        .with_context(|| format!("unable to read manifest at path {:?}", full_path))?;
+
+    // Read in the given manifest
+    let mut manifest_file = File::open(full_path)?;
+    let mut manifest = String::new();
+    manifest_file.read_to_string(&mut manifest)?;
+
+    let applied_resources = apply_manifest_yaml(&kube, &manifest).await?;
+
+    // Find any namespaces that were included in the manifest
+    let namespaces = applied_resources
+        .iter()
+        .filter(|obj| obj.types.clone().unwrap_or_default().kind == "Namespace")
+        .collect_vec();
+
+    for obj in namespaces {
+        let ns = obj
+            .metadata
+            .name
+            .as_ref()
+            .ok_or(anyhow!("Namespace object missing name field?"))?;
+        deploy_pull_secrets(chal, profile_name, ns)
+            .await
+            .with_context(|| format!("unable to deploy image pull secrets into discovered namespace {:?} from manifest", ns))?;
+    }
+
     Ok(())
 }
+
 // Updates the current ingress controller chart with the current set of TCP
 // ports needed for challenges.
 // TODO: move to Gateway to avoid needing to redeploy ingress?
