@@ -334,7 +334,7 @@ pub async fn apply_manifest_yaml(
 }
 
 /// Deserialize multi-document yaml string into a Vec of the documents
-fn multidoc_deserialize(data: &str) -> Result<Vec<serde_yaml_ng::Value>> {
+pub fn multidoc_deserialize(data: &str) -> Result<Vec<serde_yaml_ng::Value>> {
     use serde::Deserialize;
 
     let mut docs = vec![];
