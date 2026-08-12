@@ -73,7 +73,7 @@ pub fn run() -> Result<()> {
 
     // check global deploy settings for invalid challenges
     info!("validating deploy config...");
-    for (profile_name, _pconfig) in config.profiles.iter() {
+    for profile_name in config.profiles.keys() {
         // fetch from config
         let deploy_challenges = &get_profile_deploy(profile_name)?.challenges;
         let chal_slugs = chals.iter().map(|c| c.slugify_slash()).collect_vec();

@@ -182,11 +182,9 @@ fn install_helm_chart(
     let lines = BufReader::new(reader).lines();
 
     for item in lines {
-        match item {
-            Ok(line) => {
-                debug!("helm: {}", line.bright_black());
-            }
-            Err(e) => return Err(e.into()),
+        {
+            let line = item?;
+            debug!("helm: {}", line.bright_black());
         }
     }
 

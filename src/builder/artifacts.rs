@@ -140,7 +140,7 @@ pub async fn extract_asset(
         assert!(
             path.starts_with(&chal.directory),
             "extracted path {path:?} for {:?} is missing challenge directory!",
-            &chal.directory
+            chal.directory
         )
     }
 

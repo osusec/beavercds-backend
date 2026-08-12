@@ -108,7 +108,7 @@ pub async fn render_frontend_info(
                 .with_context(|| {
                     format!(
                         "could not open flag file {:?} for challenge {:?}",
-                        &full_path, chal.directory
+                        full_path, chal.directory
                     )
                 })?
                 .read_to_string(&mut flag);

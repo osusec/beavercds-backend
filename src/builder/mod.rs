@@ -175,7 +175,7 @@ async fn build_image_source(
                 .with_context(|| {
                     format!(
                         "error building image {} for chal {}",
-                        &name,
+                        name,
                         chal.directory.to_string_lossy()
                     )
                 });
