@@ -710,6 +710,10 @@ fn challenge_pod_bad_env() {
 
         let errs = chals.unwrap_err();
         assert_eq!(errs.len(), 1);
+        assert_eq!(
+            format!("{:#}", errs[0]),
+            r#"failed to parse challenge config "foo/test/challenge.yaml": could not parse envvar=value from "FOO" (missing '='?)"#
+        );
 
         Ok(())
     })
@@ -727,6 +731,7 @@ fn challenge_pod_custom_manifest() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -768,6 +773,7 @@ fn challenge_pod_custom_manifest_build() {
             author: nobody
             description: just a test challenge
             point_class: example
+            challenge_id: asdf
 
             flag:
                 text: test{it-works}
@@ -886,10 +892,6 @@ fn challenge_pod_bad_manifest_image() {
         let errs = chals.unwrap_err();
 
         assert_eq!(errs.len(), 1);
-        assert_eq!(
-            format!("{:#}", errs[0]),
-            r#"failed to parse challenge config "foo/test/challenge.yaml": could not parse envvar=value from "FOO" (missing '='?)"#
-        );
 
         Ok(())
     })
