@@ -33,6 +33,7 @@ deploy:
     misc/garf: true
     pwn/notsh: true
     web/bar: true
+    pwn/custom: true
 
 profiles:
   # configure per-environment credentials etc

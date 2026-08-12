@@ -10,7 +10,7 @@ use ureq::tls::{RootCerts, TlsConfig};
 use ureq::Agent;
 
 use crate::builder::BuildResult;
-use crate::configparser::challenge::{ExposeType, FlagType};
+use crate::configparser::challenge::{ExposeType, FlagType, PodType};
 use crate::configparser::config::ProfileConfig;
 use crate::configparser::{enabled_challenges, get_config, get_profile_config, ChallengeConfig};
 use crate::utils::render_strict;
@@ -150,9 +150,23 @@ pub async fn render_frontend_info(
 // TODO: return Option and report errors when missing
 fn chal_domain(chal: &ChallengeConfig, chal_domain: &str) -> String {
     // find first container with expose
-    match chal.pods.iter().find(|p| !p.ports.is_empty()) {
-        Some(p) => {
-            let subdomain = match &p.ports[0].expose {
+    let first_expose = chal
+        .pods
+        .iter()
+        // find first non-custom-manifest pod
+        .filter_map(|pod_type| match &pod_type {
+            PodType::Template(template) => Some(&template.ports),
+            PodType::Manifest(_) => None,
+        })
+        // with expose config
+        .find_map(|ports| ports.first());
+
+    match first_expose {
+        Some(pc) => {
+            let subdomain = match &pc.expose {
+                // TODO: drop the specific port and go with static port + chosen
+                // hostname? ask for both hostname/port? this is hacky to
+                // automatically generate a name here
                 ExposeType::Tcp(_port) => &chal.slugify_name(),
                 ExposeType::Http(hostname) => hostname,
             };
@@ -165,8 +179,19 @@ fn chal_domain(chal: &ChallengeConfig, chal_domain: &str) -> String {
 
 fn chal_port(chal: &ChallengeConfig) -> &i64 {
     // find first container with expose
-    match chal.pods.iter().find(|p| !p.ports.is_empty()) {
-        Some(p) => match &p.ports[0].expose {
+    let first_expose = chal
+        .pods
+        .iter()
+        // find first non-custom-manifest pod
+        .filter_map(|pod_type| match &pod_type {
+            PodType::Template(template) => Some(&template.ports),
+            PodType::Manifest(_) => None,
+        })
+        // with expose config
+        .find_map(|ports| ports.first());
+
+    match first_expose {
+        Some(pc) => match &pc.expose {
             ExposeType::Tcp(port) => port,
             ExposeType::Http(_hostname) => &443,
         },

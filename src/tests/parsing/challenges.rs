@@ -1,9 +1,9 @@
 use figment::Jail;
-use std::collections::HashMap;
-use std::path::PathBuf;
-
 #[cfg(test)]
 use pretty_assertions::{assert_eq, assert_ne};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::configparser::challenge::*;
 
@@ -263,7 +263,7 @@ fn challenge_no_provides_or_pods() {
         let chals = parse_all().unwrap();
 
         assert_eq!(chals[0].provide, vec![] as Vec<ProvideConfig>);
-        assert_eq!(chals[0].pods, vec![] as Vec<Pod>);
+        assert_eq!(chals[0].pods, vec![] as Vec<PodType>);
 
         Ok(())
     })
@@ -462,36 +462,36 @@ fn challenge_pods() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 2,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::new()),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 2,
                     ports: vec![PortConfig {
                         internal: 80,
                         expose: ExposeType::Http("test.chals.example.com".to_string())
                     }],
-                    volume: None
-                },
-                Pod {
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Build(BuildObject {
                         context: ".".to_string(),
                         dockerfile: "Dockerfile".to_string(),
                         args: HashMap::new()
                     }),
-                    replicas: 1,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::new()),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 1,
                     ports: vec![PortConfig {
                         internal: 8000,
                         expose: ExposeType::Tcp(12345)
                     }],
-                    volume: None
-                },
+                    volume: None,
+                },)
             ]
         );
 
@@ -545,25 +545,24 @@ fn challenge_pod_build() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
-
                     image_source: ImageSource::Build(BuildObject {
                         context: ".".to_string(),
                         dockerfile: "Dockerfile".to_string(),
                         args: HashMap::new()
                     }),
-                    replicas: 1,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::new()),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 1,
                     ports: vec![PortConfig {
                         internal: 80,
                         expose: ExposeType::Http("test.chals.example.com".to_string())
                     }],
-                    volume: None
-                },
-                Pod {
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Build(BuildObject {
                         context: "image/".to_string(),
@@ -573,16 +572,16 @@ fn challenge_pod_build() {
                             ("BAR".to_string(), "that".to_string()),
                         ])
                     }),
-                    replicas: 1,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::new()),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 1,
                     ports: vec![PortConfig {
                         internal: 80,
                         expose: ExposeType::Http("test2.chals.example.com".to_string())
                     }],
-                    volume: None
-                }
+                    volume: None,
+                })
             ]
         );
 
@@ -637,39 +636,38 @@ fn challenge_pod_env() {
         assert_eq!(
             chals[0].pods,
             vec![
-                Pod {
+                PodType::Template(Pod {
                     name: "foo".to_string(),
-
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 1,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::from([
                         ("FOO".to_string(), "this".to_string()),
                         ("BAR".to_string(), "that".to_string()),
                     ])),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 1,
                     ports: vec![PortConfig {
                         internal: 80,
                         expose: ExposeType::Http("test.chals.example.com".to_string())
                     }],
-                    volume: None
-                },
-                Pod {
+                    volume: None,
+                }),
+                PodType::Template(Pod {
                     name: "bar".to_string(),
                     image_source: ImageSource::Image("nginx".to_string()),
-                    replicas: 1,
+                    architecture: "amd64".to_string(),
                     env: ListOrMap::Map(HashMap::from([
                         ("FOO".to_string(), "this".to_string()),
                         ("BAR".to_string(), "that".to_string()),
                     ])),
                     resources: None,
-                    architecture: "amd64".to_string(),
+                    replicas: 1,
                     ports: vec![PortConfig {
                         internal: 80,
                         expose: ExposeType::Http("test2.chals.example.com".to_string())
                     }],
-                    volume: None
-                }
+                    volume: None,
+                })
             ]
         );
 
@@ -709,6 +707,182 @@ fn challenge_pod_bad_env() {
 
         let chals = parse_all();
         assert!(chals.is_err());
+
+        let errs = chals.unwrap_err();
+        assert_eq!(errs.len(), 1);
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can provide custom manifest yaml instead of our template
+fn challenge_pod_custom_manifest() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  manifest: manifests/custom.yaml
+        "#,
+        )?;
+
+        let chals_raw = parse_all();
+        assert!(chals_raw.is_ok());
+
+        let chals = chals_raw.unwrap();
+
+        assert_eq!(
+            chals[0].pods,
+            vec![PodType::Manifest(Manifest {
+                name: "foo".to_string(),
+                build: None,
+                architecture: "amd64".to_string(),
+                manifest_path: "manifests/custom.yaml".into()
+            }),]
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can provide custom manifest yaml with image build
+fn challenge_pod_custom_manifest_build() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  build: .
+                  manifest: manifests/custom.yaml
+                - name: bar
+                  build:
+                    context: src/
+                    dockerfile: Containerfile
+                  manifest: manifests/asdf.yaml
+        "#,
+        )?;
+
+        let chals_raw = parse_all();
+        assert!(chals_raw.is_ok());
+
+        let chals = chals_raw.unwrap();
+
+        assert_eq!(
+            chals[0].pods,
+            vec![
+                PodType::Manifest(Manifest {
+                    name: "foo".to_string(),
+                    build: Some(BuildObject {
+                        context: ".".to_string(),
+                        dockerfile: "Dockerfile".to_string(),
+                        args: HashMap::new()
+                    }),
+                    architecture: "amd64".to_string(),
+                    manifest_path: "manifests/custom.yaml".into()
+                }),
+                PodType::Manifest(Manifest {
+                    name: "bar".to_string(),
+                    build: Some(BuildObject {
+                        context: "src/".to_string(),
+                        dockerfile: "Containerfile".to_string(),
+                        args: HashMap::new()
+                    }),
+                    architecture: "amd64".to_string(),
+                    manifest_path: "manifests/asdf.yaml".into()
+                }),
+            ]
+        );
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can't have both manifest and template info
+fn challenge_pod_bad_manifest() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  build: .
+                  manifest: manifests/custom.yaml
+                  replicas: 1
+                  ports:
+                    - internal: 80
+                      expose:
+                        http: test.chals.example.com
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+
+        let errs = chals.unwrap_err();
+        assert_eq!(errs.len(), 1);
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge pods can't have both manifest and image
+fn challenge_pod_bad_manifest_image() {
+    figment::Jail::expect_with(|jail| {
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+
+            flag:
+                text: test{it-works}
+
+            pods:
+                - name: foo
+                  image: nginx:alpine
+                  manifest: manifests/custom.yaml
+        "#,
+        )?;
+
+        let chals = parse_all();
+        assert!(chals.is_err());
+
         let errs = chals.unwrap_err();
 
         assert_eq!(errs.len(), 1);
