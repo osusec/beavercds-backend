@@ -6,8 +6,6 @@ use glob::glob;
 use itertools::Itertools;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_with::{serde_as, DeserializeAs};
-use std::fmt::Display;
-// use serde_nested_with::serde_nested;
 use std::collections::HashMap as Map;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -95,7 +93,9 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
                             if split.len() == 2 {
                                 Ok((split[0].to_string(), split[1].to_string()))
                             } else {
-                                Err(anyhow!("Cannot split envvar {var:?}"))
+                                Err(anyhow!(
+                                    "could not parse envvar=value from {var:?} (missing '='?)"
+                                ))
                             }
                         })
                         .try_collect()?;
@@ -162,6 +162,8 @@ pub struct ChallengeConfig {
     // in the repo rcds.yaml config. Optional, will use the configured default
     // if not set.
     point_class: Option<String>,
+
+    challenge_id: String,
 
     flag: FlagType,
 
@@ -428,7 +430,7 @@ struct PortConfig {
     expose: ExposeType,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "lowercase")]
 #[fully_pub]
 enum ExposeType {

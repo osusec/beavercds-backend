@@ -10,6 +10,19 @@ pub fn run() -> Result<()> {
     info!("validating config...");
 
     let config = get_config()?;
+
+    // is point class max/min order correct?
+    for class in config.point_classes.iter() {
+        if class.min > class.max {
+            bail!(
+                "min/max points are backwards for point class '{}' (min: {} > max: {})",
+                class.name,
+                class.min,
+                class.max
+            )
+        }
+    }
+
     info!("  config ok!");
 
     info!("validating challenges...");
@@ -24,6 +37,7 @@ pub fn run() -> Result<()> {
             bail!("failed to validate challenges");
         }
     };
+
     // double check specific things about challenges
     for chal in chals {
         // does point class exist in default config?
@@ -38,11 +52,28 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // are all challenge ids unique?
+    // find any challenges with duplicate ids
+    let dups = chals
+        .iter()
+        .duplicates_by(|c| &c.challenge_id)
+        .collect_vec();
+    if !dups.is_empty() {
+        // fetch the other challenge with the duplicate id. duplicates() only
+        // returns the second duplicating item, not both, so need to get it.
+        let duped_chals = chals
+            .iter()
+            .filter(|c| dups.iter().any(|d| d.challenge_id == c.challenge_id))
+            .map(|c| c.slugify_slash())
+            .collect_vec();
+        bail!("challenge IDs for chals {:?} conflict", duped_chals);
+    }
+
     info!("  challenges ok!");
 
     // check global deploy settings for invalid challenges
     info!("validating deploy config...");
-    for (profile_name, _pconfig) in config.profiles.iter() {
+    for profile_name in config.profiles.keys() {
         // fetch from config
         let deploy_challenges = &get_profile_deploy(profile_name)?.challenges;
         let chal_slugs = chals.iter().map(|c| c.slugify_slash()).collect_vec();

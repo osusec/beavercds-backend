@@ -88,12 +88,12 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                         .with_help_message("The name of the point class.")
                         .with_placeholder(example_values::POINTS_EASY_CLASS)
                         .prompt()?,
-                    min: inquire::CustomType::<i64>::new("Minimum points:")
+                    min: inquire::CustomType::<u32>::new("Minimum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The minimum number of points that challenges within this class are worth.") // too long to format
                         .with_default(example_values::POINTS_EASY_MIN)
                         .prompt()?,
-                    max: inquire::CustomType::<i64>::new("Maximum points:")
+                    max: inquire::CustomType::<u32>::new("Maximum points:")
                         .with_error_message("Please type a valid number.") // default parser calls std::u64::from_str
                         .with_help_message("The maximum number of points that challenges within this class are worth.") // too long to format
                         .with_default(example_values::POINTS_EASY_MAX)

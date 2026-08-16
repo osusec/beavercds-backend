@@ -5,6 +5,8 @@ description: |
 
   {{ url }}
 
+challenge_id: cccccc
+
 flag:
   file: ./site_source/flag
 

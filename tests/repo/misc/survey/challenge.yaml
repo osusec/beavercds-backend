@@ -1,0 +1,11 @@
+name: survey
+author: Management
+description: |
+  worth one point! (probably)
+
+point_class: survey
+
+challenge_id: '44c41a'
+
+flag:
+  text: dam{wow_survey}

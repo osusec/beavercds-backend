@@ -131,8 +131,8 @@ struct Defaults {
 struct PointClass {
     /// Name of this difficulty level
     name: String,
-    min: i64,
-    max: i64,
+    min: u32,
+    max: u32,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]

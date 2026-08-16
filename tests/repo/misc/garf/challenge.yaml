@@ -6,6 +6,8 @@ description: |
 # corresponds to point values in rcds.yaml, or default
 point_class: simple
 
+challenge_id: f41269
+
 # alternatively, flag: dam{wtf}
 flag:
   text: dam{garf}

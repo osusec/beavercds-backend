@@ -11,7 +11,7 @@ spec:
     rctf/part-of: "{{ slug }}-{{ pod.name }}"
   ports:
     # host service at same port as container
-    {% for p in http_ports -%}
+    {%- for p in http_ports | unique(attribute="internal") %}
     - port: {{ p.internal }}
       targetPort: {{ p.internal }}
     {%- endfor %}

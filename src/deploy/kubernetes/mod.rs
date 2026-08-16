@@ -23,14 +23,10 @@ use crate::utils::{render_strict, TryJoinAll};
 pub mod templates;
 
 /// How and where a challenge was deployed/exposed at
+#[derive(Default, Clone)]
 pub struct KubeDeployResult {
     // challenges could have multiple exposed services
-    pub exposed: Vec<PodDeployResult>,
-}
-
-pub enum PodDeployResult {
-    Http { domain: String },
-    Tcp { port: usize },
+    pub exposed: Vec<ExposeType>,
 }
 
 // Deploy all K8S resources for a single challenge `chal`.
@@ -78,9 +74,7 @@ pub async fn apply_challenge_resources(
 
     // namespace boilerplate over, deploy actual challenge pods
 
-    let results = KubeDeployResult { exposed: vec![] };
-
-    let _ = &chal
+    let results = chal
         .pods
         .iter()
         .map(|pod_type| async {
@@ -107,7 +101,16 @@ pub async fn apply_challenge_resources(
         .try_join_all()
         .await?;
 
-    Ok(results)
+    // combine results from all challenge pods into one result
+    let combined = results
+        .into_iter()
+        .reduce(|mut acc, r| {
+            acc.exposed.extend(r.exposed);
+            acc
+        })
+        .unwrap_or_default();
+
+    Ok(combined)
 }
 
 /// Deploy imagepullsecret from config into given namespace
@@ -144,7 +147,11 @@ async fn deploy_pull_secrets(
 }
 
 /// Deploy challenge pod using our standard pod template
-async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &Pod) -> Result<()> {
+async fn deploy_template_pod(
+    chal: &ChallengeConfig,
+    profile_name: &str,
+    pod: &Pod,
+) -> Result<KubeDeployResult> {
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;
 
@@ -189,6 +196,8 @@ async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &P
         .iter()
         .partition(|p| matches!(p.expose, ExposeType::Tcp(_)));
 
+    let mut results = KubeDeployResult { exposed: vec![] };
+
     if !tcp_ports.is_empty() {
         let tcp_manifest = render_strict(
             templates::CHALLENGE_SERVICE_TCP,
@@ -224,8 +233,9 @@ async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &P
                 })?;
         }
 
-        // TODO:
-        // expose_results.exposed.push(PodDeployResult::Tcp { port: tcp_ports[0]. });
+        results
+            .exposed
+            .extend(tcp_ports.iter().map(|p| p.expose.to_owned()));
     }
 
     if !http_ports.is_empty() {
@@ -262,9 +272,13 @@ async fn deploy_template_pod(chal: &ChallengeConfig, profile_name: &str, pod: &P
                     )
                 })?;
         }
+
+        results
+            .exposed
+            .extend(http_ports.iter().map(|p| p.expose.to_owned()));
     }
 
-    Ok(())
+    Ok(results)
 }
 
 /// Deploy custom manifest resources for challenge pod
@@ -276,7 +290,7 @@ async fn deploy_custom_manifest(
     chal: &ChallengeConfig,
     profile_name: &str,
     manifest: &Manifest,
-) -> Result<()> {
+) -> Result<KubeDeployResult> {
     let profile = get_profile_config(profile_name)?;
     let kube = kube_client(profile).await?;
 
@@ -311,7 +325,9 @@ async fn deploy_custom_manifest(
             .with_context(|| format!("unable to deploy image pull secrets into discovered namespace {:?} from manifest", ns))?;
     }
 
-    Ok(())
+    // return empty result, we can't (easily) auto-detect what gets exposed in
+    // the manifest
+    Ok(KubeDeployResult { exposed: vec![] })
 }
 
 // Updates the current ingress controller chart with the current set of TCP

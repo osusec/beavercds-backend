@@ -181,7 +181,7 @@ pub async fn copy_file(container: &ContainerInfo, from: &Path, to: &Path) -> Res
             c.with_context(|| {
                 format!(
                     "could not copy file {}:{} to {}",
-                    &container.name,
+                    container.name,
                     from.to_string_lossy(),
                     to.to_string_lossy()
                 )

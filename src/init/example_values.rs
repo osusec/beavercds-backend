@@ -13,11 +13,11 @@ pub static DEFAULTS_RESOURCES_CPU: i64 = 1;
 pub static DEFAULTS_RESOURCES_MEMORY: &str = "500M";
 
 pub static POINTS_EASY_CLASS: &str = "easy";
-pub static POINTS_EASY_MIN: i64 = 200;
-pub static POINTS_EASY_MAX: i64 = 500;
+pub static POINTS_EASY_MIN: u32 = 200;
+pub static POINTS_EASY_MAX: u32 = 500;
 pub static POINTS_HARD_CLASS: &str = "hard";
-pub static POINTS_HARD_MIN: i64 = 300;
-pub static POINTS_HARD_MAX: i64 = 600;
+pub static POINTS_HARD_MIN: u32 = 300;
+pub static POINTS_HARD_MAX: u32 = 600;
 
 pub static PROFILES_PROFILE_NAME: &str = "default";
 pub static PROFILES_FRONTEND_URL: &str = "https://ctf.coolguy.invalid";
