@@ -69,9 +69,8 @@ pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> 
 
     install_helm_chart(
         profile,
-        HelmSource::Repo {
-            chart: "cert-manager",
-            repo: "https://charts.jetstack.io",
+        HelmSource::Oci {
+            chart: "oci://quay.io/jetstack/charts/cert-manager",
         },
         None,
         "cert-manager",
