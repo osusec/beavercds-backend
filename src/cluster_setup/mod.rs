@@ -38,28 +38,27 @@ enum HelmSource {
         chart: &'static str,
     },
     Oci {
-        repo: &'static str,
+        chart: &'static str,
     },
 }
 
 pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
-    info!("deploying ingress-nginx chart...");
+    info!("deploying haproxy ingress chart...");
 
-    const VALUES: &str = include_str!("../asset_files/setup_manifests/ingress-nginx.helm.yaml");
+    const VALUES: &str = include_str!("../asset_files/setup_manifests/haproxy-ingress.helm.yaml");
     trace!("values:\n{}", VALUES);
 
     install_helm_chart(
         profile,
-        HelmSource::Repo {
-            chart: "ingress-nginx",
-            repo: "https://kubernetes.github.io/ingress-nginx",
+        HelmSource::Oci {
+            chart: "oci://ghcr.io/haproxytech/helm-charts/kubernetes-ingress",
         },
         None,
-        "ingress-nginx",
+        "haproxy",
         INGRESS_NAMESPACE,
         VALUES,
     )
-    .context("failed to install ingress-nginx helm chart")
+    .context("failed to install haproxy ingress helm chart")
 }
 
 pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> {
@@ -166,7 +165,7 @@ fn install_helm_chart(
 
     let chart_source = match chart {
         HelmSource::Repo { repo, chart } => format!("--repo {repo} {chart}"),
-        HelmSource::Oci { repo } => repo.to_string(),
+        HelmSource::Oci { chart } => chart.to_string(),
     };
 
     // use `upgrade --install` instead of `install` so subsequent runs dont
