@@ -32,22 +32,33 @@ use crate::utils::render_strict;
 // install these charts into this namespace
 pub const INGRESS_NAMESPACE: &str = "ingress";
 
-pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
-    info!("deploying ingress-nginx chart...");
+enum HelmSource {
+    Repo {
+        repo: &'static str,
+        chart: &'static str,
+    },
+    Oci {
+        chart: &'static str,
+    },
+}
 
-    const VALUES: &str = include_str!("../asset_files/setup_manifests/ingress-nginx.helm.yaml");
+pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
+    info!("deploying haproxy ingress chart...");
+
+    const VALUES: &str = include_str!("../asset_files/setup_manifests/haproxy-ingress.helm.yaml");
     trace!("values:\n{}", VALUES);
 
     install_helm_chart(
         profile,
-        "ingress-nginx",
-        "https://kubernetes.github.io/ingress-nginx",
+        HelmSource::Oci {
+            chart: "oci://ghcr.io/haproxytech/helm-charts/kubernetes-ingress",
+        },
         None,
-        "ingress-nginx",
+        "haproxy",
         INGRESS_NAMESPACE,
         VALUES,
     )
-    .context("failed to install ingress-nginx helm chart")
+    .context("failed to install haproxy ingress helm chart")
 }
 
 pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> {
@@ -58,8 +69,9 @@ pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> 
 
     install_helm_chart(
         profile,
-        "cert-manager",
-        "https://charts.jetstack.io",
+        HelmSource::Oci {
+            chart: "oci://quay.io/jetstack/charts/cert-manager",
+        },
         None,
         "cert-manager",
         INGRESS_NAMESPACE,
@@ -104,8 +116,10 @@ pub async fn install_extdns(profile: &config::ProfileConfig) -> Result<()> {
 
     install_helm_chart(
         profile,
-        "external-dns",
-        "https://kubernetes-sigs.github.io/external-dns",
+        HelmSource::Repo {
+            repo: "https://kubernetes-sigs.github.io/external-dns",
+            chart: "external-dns",
+        },
         None,
         "external-dns",
         INGRESS_NAMESPACE,
@@ -120,8 +134,7 @@ pub async fn install_extdns(profile: &config::ProfileConfig) -> Result<()> {
 /// Install the chart via shelling out to Helm cli
 fn install_helm_chart(
     profile: &config::ProfileConfig,
-    chart: &str,
-    repo: &str,
+    chart: HelmSource,
     version: Option<&str>,
     release_name: &str,
     namespace: &str,
@@ -144,10 +157,15 @@ fn install_helm_chart(
         None => "".to_string(),
     };
 
-    // build args as string/split instead of direct vec to make interpolating
-    // conditional repo_arg easier. there is not weird whitespace etc. that
-    // would mess up interpolation; all of the values here are constants
-    // elsewhere, no user input.
+    // Build args as a string and split on whitespace instead of a direct vec!
+    // to make interpolating the conditional `repo` arg easier. This does not
+    // have any weird whitespace etc. that would mess up interpolation; all of
+    // the interpolated values here are constants, no user input.
+
+    let chart_source = match chart {
+        HelmSource::Repo { repo, chart } => format!("--repo {repo} {chart}"),
+        HelmSource::Oci { chart } => chart.to_string(),
+    };
 
     // use `upgrade --install` instead of `install` so subsequent runs dont
     // error when the release already exists
@@ -155,7 +173,7 @@ fn install_helm_chart(
         r#"
         upgrade --install
             {release_name}
-            {chart} --repo {repo} {version_arg}
+            {chart_source} {version_arg}
             --namespace {namespace} --create-namespace
             --values {}
             --wait --timeout 1m
