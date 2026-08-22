@@ -43,24 +43,22 @@ services:
     image: nginx:alpine
     ports:
       - 8080:80
-    entrypoint:
-      - sh
-      - -c
-      - |
-        cat <<'EOF' > /etc/nginx/conf.d/default.conf
-        server {
-          listen 80;
-          default_type application/json;
+    configs:
+      - source: mock_frontend.conf
+        target: /etc/nginx/conf.d/default.conf
 
-          location /api/checkaccess {
-            return 200 '{"status":"ok"}';
-          }
+configs:
+  mock_frontend.conf:
+    content: |
+      server {
+        listen 80;
+        default_type application/json;
 
-          location /api/resolvestate {
-            limit_except POST {
-              return 200 '{"current":[],"removed":[]}';
-            }
-          }
+        location /api/checkaccess {
+          return 200 '{"status":"ok"}';
         }
-        EOF
-        nginx -g 'daemon off;'
+
+        location /api/resolvestate {
+          return 200 '{"current":[],"removed":[]}';
+        }
+      }
