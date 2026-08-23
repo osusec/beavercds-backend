@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::fmt;
 use tracing::{debug, error, info, trace, warn};
 
-use crate::configparser::config::{self, ProfileConfig, S3Config};
+use crate::configparser::config::{self, Bracket, ProfileConfig, S3Config};
 use crate::utils::render_strict;
 
 pub mod example_values;
@@ -138,7 +138,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
         },
 
         brackets: {
-            println!("By default, there is a single open bracket available for everyone. You can define additional team brackets classes below.");
+            println!("Add a competition bracket for teams to join. There should be at least one bracket open to players.");
             let mut brackets = vec![];
             let mut again = true;
             while again {
@@ -149,7 +149,7 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
                         .prompt()?,
 
                     password: inquire::Text::new("Bracket password:")
-                        .with_help_message("Password required to join this bracket, or leave blank/ESC for an open bracket.")
+                        .with_help_message("Password required to join this bracket, or leave blank for an open bracket.")
                         .prompt_skippable()?,
                 };
                 brackets.push(brackets_obj);
