@@ -45,6 +45,9 @@ pub async fn update_frontend(
     chal_infos: &[FrontendChalData],
 ) -> Result<FrontendResolveResponse> {
     let profile = get_profile_config(profile_name)?;
+    let config = get_config()?;
+
+    info!("updating frontend with challenge info...");
 
     let agent = Agent::config_builder()
         .tls_config(
@@ -55,12 +58,28 @@ pub async fn update_frontend(
         .build()
         .new_agent();
 
+    // POST collected challenge data to frontend.
     let resp = agent
         .post(format!("{}/api/resolvestate", profile.frontend_url))
         .header("Authorization", format!("Token {}", profile.frontend_token))
         .send_json(chal_infos)
         .context("could not update frontend with challenge info")?;
 
+    let body: FrontendResolveResponse = resp
+        .into_body()
+        .read_json()
+        .context("got malformed response from frontend")?;
+
+    debug!("got response from frontend: {:?}", body);
+
+    // POST bracket config to that endpoint as well.
+    let resp = agent
+        .post(format!("{}/api/updatebrackets", profile.frontend_url))
+        .header("Authorization", format!("Token {}", profile.frontend_token))
+        .send_json(&config.brackets)
+        .context("could not update frontend with brackets config")?;
+    // Frontend uses the same current/removed response schema as the chals
+    // update.
     let body: FrontendResolveResponse = resp
         .into_body()
         .read_json()

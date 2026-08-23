@@ -137,6 +137,31 @@ pub fn interactive_init() -> inquire::error::InquireResult<config::RcdsConfig> {
             },
         },
 
+        brackets: {
+            println!("By default, there is a single open bracket available for everyone. You can define additional team brackets classes below.");
+            let mut brackets = vec![];
+            let mut again = true;
+            while again {
+                let brackets_obj = config::Bracket {
+                    name: inquire::Text::new("Bracket:")
+                        .with_validator(inquire::required!("Please provide a name."))
+                        .with_help_message("The name of the bracket.")
+                        .prompt()?,
+
+                    password: inquire::Text::new("Bracket password:")
+                        .with_help_message("Password required to join this bracket, or leave blank/ESC for an open bracket.")
+                        .prompt_skippable()?,
+                };
+                brackets.push(brackets_obj);
+
+                again = inquire::Confirm::new("Do you want to provide another bracket?")
+                    .with_default(false)
+                    .prompt()?;
+            }
+
+            brackets
+        },
+
         profiles: {
             println!("You can define several environment profiles below.");
 
@@ -236,6 +261,7 @@ pub fn blank_init() -> config::RcdsConfig {
                 memory: "".to_string(),
             },
         },
+        brackets: vec![],
         point_classes: vec![],
         deploy: HashMap::from([]),
         profiles: HashMap::from([]),
@@ -266,6 +292,16 @@ pub fn placeholder_init() -> config::RcdsConfig {
                 memory: example_values::DEFAULTS_RESOURCES_MEMORY.to_string(),
             },
         },
+        brackets: vec![
+            config::Bracket {
+                name: example_values::BRACKETS_OPEN_NAME.to_string(),
+                password: None,
+            },
+            config::Bracket {
+                name: example_values::BRACKETS_CLOSED_NAME.to_string(),
+                password: Some(example_values::BRACKETS_CLOSED_PW.to_string()),
+            },
+        ],
         point_classes: vec![
             config::PointClass {
                 name: example_values::POINTS_EASY_CLASS.to_string(),
