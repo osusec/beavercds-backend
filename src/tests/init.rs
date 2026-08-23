@@ -36,6 +36,11 @@ defaults:
   point_class: ""
   resources: { cpu: 0, memory: "" }
 
+# Competition brackets that teams can join. Password is optional, if omitted
+# the bracket will be open to any teams.
+brackets:
+  []
+
 # The list of different point classes that challenges can be assigned, and how
 # many points that challenges in that class should be worth. All challenges use
 # dynamic scoring; for static points set both min and max to the same value.
@@ -87,6 +92,13 @@ registry:
 defaults:
   point_class: "easy"
   resources: { cpu: 1, memory: "500M" }
+
+# Competition brackets that teams can join. Password is optional, if omitted
+# the bracket will be open to any teams.
+brackets:
+  - name: "open"
+  - name: "closed"
+    password: "somethingsecret"
 
 # The list of different point classes that challenges can be assigned, and how
 # many points that challenges in that class should be worth. All challenges use
