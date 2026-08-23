@@ -39,26 +39,35 @@ services:
         exit 0;
       "
 
-  mock_frontend:
-    image: nginx:alpine
+  mock-frontend:
+    image: ghcr.io/astral-sh/uv:alpine
+    command: uvx flask --app mock_frontend run --host 0.0.0.0 --port 8080
+    working_dir: /app
     ports:
-      - 8080:80
+      - 8080:8080
     configs:
-      - source: mock_frontend.conf
-        target: /etc/nginx/conf.d/default.conf
+      - source: mock_frontend.py
+        target: /app/mock_frontend.py
 
 configs:
-  mock_frontend.conf:
+  mock_frontend.py:
     content: |
-      server {
-        listen 80;
-        default_type application/json;
+      from flask import Flask, request
 
-        location /api/checkaccess {
-          return 200 '{"status":"ok"}';
-        }
+      app = Flask(__name__)
 
-        location /api/resolvestate {
-          return 200 '{"current":[],"removed":[]}';
-        }
-      }
+      @app.before_request
+      def log_request():
+          print(f"{request.method} {request.full_path} : {request.get_data().decode()}", flush=True)
+
+      @app.get("/api/checkaccess")
+      def checkaccess():
+          return {"status":"ok"}
+
+      @app.post("/api/resolvestate")
+      def resolvestate():
+          return {"current":[],"removed":[]}
+
+      @app.post("/api/updatebrackets")
+      def updatebrackets():
+          return {"current":[],"removed":[]}
