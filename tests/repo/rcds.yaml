@@ -38,7 +38,7 @@ deploy:
 profiles:
   # configure per-environment credentials etc
   testing:
-    frontend_url: https://httpbin.org/anything
+    frontend_url: http://mock_frontend.localhost:8080
     frontend_token: secretsecretsecret
     challenges_domain: chals.frontend.example
     kubecontext: testcluster
