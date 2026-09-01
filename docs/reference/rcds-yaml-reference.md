@@ -42,7 +42,7 @@ registry:
   
 ```
 
-### `domain`
+### `.domain`
 
 This is the shared portion of the container image spec for the registry that
 will be used in the `tag_format` template. This should include the hostname and
@@ -50,7 +50,7 @@ any persistent components.
 
 Examples: `docker.io/yourorg`, `ghcr.io/examplesec`
 
-### `tag_format`
+### `.tag_format`
 
 Specifies the container image and tag that challenge containers will be built
 as. This is used as a template with the challenge information to produce the
@@ -96,7 +96,7 @@ registry:
 # --> registry.gitlab.com/ourteam/challenges-2025/pwn-notsh/main:prod
 ```
 
-### `build`
+### `.build`
 
 Registry credentials that will be used locally to push up challenge container
 images. This must have push permissions. 
@@ -110,7 +110,7 @@ registry:
     pass: notrealpass
 ```
 
-### `cluster`
+### `.cluster`
 
 Registry credentials that will be used in the Kubernetes cluster to pull the
 challenge container images. This must have pull permissions, but does not need
@@ -125,36 +125,36 @@ registry:
     pass: stillnotreal
 ```
 
-## `points`
+## `point_classes`
 
-Defines the available difficulty classes for challenges. This allows challenges
+Defines the available point classes for challenges. This allows challenges
 to be worth different points, e.g. for harder challenges or a survey with
 minimal points.
-
-```yaml
-points:
-  - difficulty: "normal"
-    max: 500
-    min: 100
-  - difficulty: "hard"
-    max: 600
-    min: 200
-  - difficulty: "survey"
-    max: 1
-    min: 1
-```
-
-### `difficulty`
 
 ::: info
 Not implemented yet, does nothing. Requires upcoming scoreboard integration.
 :::
 
-Name of this difficulty class. Challenges will use this name to set their
-difficulty class via the [`difficulty` field in their
-`challenge.yaml`](./challenge-yaml-reference.md#difficulty).
+```yaml
+point_classes:
+  - name: "standard"
+    min: 100
+    max: 1337
+  - name: "simple"
+    min: 50
+    max: 100
+  - name: "survey"
+    min: 1
+    max: 1
+```
 
-### max, min
+### `.name`
+
+Name of this difficulty class. Challenges will use this name to set their
+difficulty class via the [`point_class` field in their
+`challenge.yaml`](./challenge-yaml-reference.md#point-class).
+
+### `.max`, `.min`
 
 Maximum and minimum points that challenges with this difficulty will be scored
 as. Points are done via dynamic scoring; challenges start at max points and as
@@ -171,15 +171,34 @@ defaults:
   resources: { cpu: 1, memory: 500Mi }
 ```
 
-### `difficulty`
+### `.point_class`
 
-Default difficulty class name to use for challenges that do not explicitly set
-one.
+Default point class name to use for challenges that do not explicitly set one.
 
-### `resources`
+### `.resources`
 
 Default resource request/limits to use for challenges that do not explicitly set
 one.
+
+## `brackets`
+
+List of brackets that teams will be able to compete in during the CTF.
+
+```yaml
+brackets:
+  - name: open
+  - name: private
+    password: smthsecret
+```
+
+### `.name`
+
+Name of the bracket, as shown to the players and in the scoreboard.
+
+### `.password`
+
+Optional. If set, players will need to enter this in order to join the team. If
+omitted, any team will be able to join. This will be hashed in the 
 
 ## `deploy`
 
