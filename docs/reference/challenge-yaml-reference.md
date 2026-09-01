@@ -14,7 +14,7 @@ Available fields:
 
 `*` denotes required fields.
 
-## `name`*
+## `name` *
 
 - type: `string`
 - no default
@@ -29,7 +29,7 @@ name: cha-cha-cha
 name: Revenge of the FIPS
 ```
 
-## `author`*
+## `author` *
 
 - type: `string`
 - no default
@@ -43,7 +43,7 @@ author: John Author
 author: Alice, Bob, and others
 ```
 
-## `description`*
+## `description` *
 
 - type: `string`
 - no default
@@ -74,6 +74,17 @@ description: |
   {{ link }}    # [https://somechal.chals.example.ctf](https://somechal.chals.example.ctf)
 ```
 
+## `challenge_id` *
+
+- type: `string`
+- no default
+
+Persistent challenge identifier, used by the frontend scoreboard to track challenges if they are renamed.
+
+This accepts any string but we recommend using a short random string, for example from `pwgen 8`.
+
+Once set, this should not be renamed.
+
 ## `category`
 
 - type: `string`
@@ -81,26 +92,33 @@ description: |
 
 The category for the challenge, parsed from the directory structure.
 
-::: warning
+::: danger
 This is automatically set from the expected directory structure of `<category>/<name>/challenge.yaml` and should not be set in the file.
 :::
 
-## `difficulty`
+## `point_class`
 
-- type: `integer`
-- no default
+- type: `string`
+- default: set in `rcds.yaml`
 
-::: error
+::: warning
 Not implemented yet, does nothing. Requires upcoming scoreboard integration.
 :::
 
-The difficulty from the challenge, used to set point values. Values correspond to entries in the [rcds.yaml difficulty settings](rcds-yaml-reference#difficulty).
+The point class of the challenge, used to set point values. Values correspond to entries in the [rcds.yaml point_class settings](rcds-yaml-reference#point-class). The default value is set in the [rcds.yaml defaults settings](rcds-yaml-reference#defaults)
 
 ```yaml
-difficulty: 1 # the current default
+point_class: standard
+
+point_class: survey
+
+# (given a challenge.yaml that looks like:)
+# point_classes:
+#   - name: standard
+#   - name: survey
 ```
 
-## `flag`*
+## `flag` *
 
 - type: `string` | `dict`
 - no default

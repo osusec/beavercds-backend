@@ -29,6 +29,8 @@ $ touch $CATEGORY/$CHAL_NAME/challenge.yaml
 
 Add the name, author, and description fields for your challenge to the `challenge.yaml` file. These will be shown to players on the scoreboard.
 
+Also add a challenge id. We recommend using a short random string, for example from `pwgen 8`. This will be used as a stable identifier for the challenge if the name changes.
+
 ```yaml [challenge.yaml]
 name: My First Pyjail 🙂
 author: John Author
@@ -36,6 +38,8 @@ description: |
   how will you get out of this one?
 
   {{ nc }}
+
+challenge_id: U3b2rXRR
 ```
 
 The challenge name and author will be shown to players as written.
