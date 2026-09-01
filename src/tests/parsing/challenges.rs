@@ -320,7 +320,7 @@ fn challenge_no_point_class() {
 
         let chals = parse_all().unwrap();
 
-        assert_eq!(chals[0].point_class, None);
+        assert_eq!(chals[0].point_class, Some("example".to_string()));
 
         Ok(())
     })

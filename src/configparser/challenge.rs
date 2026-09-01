@@ -115,6 +115,10 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
         }
     }
 
+    if parsed.point_class.is_none() {
+        parsed.point_class = Some(config.defaults.point_class.to_string())
+    }
+
     trace!("got challenge config: {parsed:#?}");
 
     Ok(parsed)
