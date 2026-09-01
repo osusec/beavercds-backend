@@ -234,6 +234,8 @@ Defines how to build and deploy any services needed for the challenge.
 
 Challenge pods can be built from a local Dockerfile in the challenge folder or use an upstream image directly.
 
+Pods can either define parameters for a deployment template or a path to a manifest file for custom deployment resources.
+
 If there are no pods or images needed for this challenge, this can be omitted or set to an empty array.
 
 ```yaml
@@ -251,6 +253,9 @@ pods:
     env:
       POSTGRES_USER: someuser
       POSTGRES_PASSWORD: notsecure
+
+  - name: something-custom
+    manifest: custom/manifest.yaml
 
 # if no containers or pods need to be deployed:
 pods: []
@@ -307,6 +312,32 @@ Conflicts with [`image`](#image).
 Use an available container image for the pod instead of building one from source.
 
 Conflicts with [`build`](#build).
+
+### `.manifest`
+
+Path to a file containing custom Kubernetes resources. All resources from this manifest will be deployed into the cluster instead of the normal deployment template. 
+
+Image pull secrets will be added to any Namespace included in the manifest using the [configured cluster credentials](rcds-yaml-reference#cluster). All other resources will be deployed **as-is** with no modifications or checks.
+
+Manifest pods can specify a `build:` config to have an image built and pushed to the registry like the normal pod template. 
+
+Conflicts with all pod parameters except [`name`](#name) and [`build`](#build).
+
+::: warning
+This will not perform any templating or add additional resources outside of the pull credentials. If any services in the manifest use a built image or need to be exposed, that must be hardcoded in the manifest.
+:::
+
+```yaml
+pods:
+  - name: my-custom-stuff
+    manifest: custom.yaml
+
+  - name: with-image
+    build: 
+      context: src/
+      dockerfile: Dockerfile
+    manifest: custom-image.yaml   # must hardcode the built image reference
+```
 
 ### `.env`
 
