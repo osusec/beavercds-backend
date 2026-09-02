@@ -114,7 +114,7 @@ pub async fn render_frontend_info(
                 .read_to_string(&mut flag);
             flag
         }
-        FlagType::Text { text } => text.clone(),
+        FlagType::String { string: text } => text.clone(),
         FlagType::Regex { regex } => unimplemented!("flag regex not implemented"),
         FlagType::Verifier { verifier } => unimplemented!("flag custom verifier not implemented"),
     };

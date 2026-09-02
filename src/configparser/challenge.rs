@@ -74,6 +74,8 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
         .merge(Serialized::default("category", category))
         .extract()?;
 
+    let config = get_config()?;
+
     // coerce pod env lists to maps
     // TODO: do this in serde deserialize?
     for pod_type in parsed.pods.iter_mut() {
@@ -105,7 +107,16 @@ pub fn parse_one(path: &PathBuf) -> Result<ChallengeConfig> {
                     ListOrMap::Map(map)
                 }
             };
+
+            // set default resources from global config
+            if pod.resources.is_none() {
+                pod.resources = Some(config.defaults.resources.clone())
+            }
         }
+    }
+
+    if parsed.point_class.is_none() {
+        parsed.point_class = Some(config.defaults.point_class.to_string())
     }
 
     trace!("got challenge config: {parsed:#?}");
@@ -249,10 +260,19 @@ impl ChallengeConfig {
 #[fully_pub]
 enum FlagType {
     RawString(String),
-    File { file: PathBuf },
-    Text { text: String },
-    Regex { regex: String },
-    Verifier { verifier: String },
+    File {
+        file: PathBuf,
+    },
+    String {
+        #[serde(alias = "text")]
+        string: String,
+    },
+    Regex {
+        regex: String,
+    },
+    Verifier {
+        verifier: String,
+    },
 }
 
 // Parse each distinct kind of Provide action as a separate enum variant
