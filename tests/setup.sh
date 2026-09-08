@@ -11,6 +11,16 @@ dockpod (){
 export CLUSTER_NAME=beavercds
 COMPOSE_FILE="$(git rev-parse --show-toplevel)/tests/services.compose.yaml"
 
+detect_rootless (){
+  # Docker and Podman have different info endpoint formats for how they report
+  # rootless mode.
+  if [ "$(dockpod)" = "docker" ] ; then
+    $(dockpod) info --format='{{.SecurityOptions}}' | grep -q rootless || return 1
+  else
+    $(dockpod) info --format='{{.Host.Security.Rootless}}' | grep -q true || return 1
+  fi
+}
+
 start_stuff (){
   # start cluster
 
@@ -20,10 +30,10 @@ start_stuff (){
   # minikube start --container-runtime=cri-o
 
   # rootless podman? add kubelet-in-rootless arg
-  if $(dockpod) info --format={{.Host.Security.Rootless}} | grep -q true ; then
+  if detect_rootless; then
     ROOTLESS_ARG='--k3s-arg=--kubelet-arg=feature-gates=KubeletInUserNamespace=true@server:*'
   else
-    ROOTLESS_ARG=''
+    ROOTLESS_ARG=
   fi
 
   # create cluster and expose ingress ports
@@ -31,7 +41,7 @@ start_stuff (){
     -p "8000:80@loadbalancer" -p "8443:443@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
     --registry-config "$(git rev-parse --show-toplevel)/tests/registry.k3d.yaml" \
-    "$ROOTLESS_ARG"
+    $ROOTLESS_ARG
 
   # start registry
   $(dockpod) compose -f $COMPOSE_FILE up -d
