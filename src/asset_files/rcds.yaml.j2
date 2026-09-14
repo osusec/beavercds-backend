@@ -22,6 +22,18 @@ defaults:
   point_class: "{{ defaults.point_class }}"
   resources: { cpu: {{ defaults.resources.cpu }}, memory: "{{ defaults.resources.memory }}" }
 
+# Competition brackets that teams can join. Password is optional, if omitted
+# the bracket will be open to any teams.
+brackets:
+  {%- for b in brackets %}
+  - name: "{{ b.name }}"
+    {%- if b.password %}
+    password: "{{ b.password }}"
+    {%- endif %}
+  {%- else %}
+  []
+  {%- endfor %}
+
 # The list of different point classes that challenges can be assigned, and how
 # many points that challenges in that class should be worth. All challenges use
 # dynamic scoring; for static points set both min and max to the same value.

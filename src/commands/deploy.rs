@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::process::exit;
 use tracing::{debug, error, info, trace, warn};
 
-use crate::builder::build_challenges;
+use crate::builder;
 use crate::configparser::{get_config, get_profile_config};
 use crate::deploy;
 
@@ -22,7 +22,7 @@ pub async fn run(profile_name: &str, no_build: &bool, _dry_run: &bool) -> Result
     }
 
     info!("building challenges...");
-    let build_results = build_challenges(profile_name, true, true).await?;
+    let build_results = builder::build_challenges(profile_name, true, true).await?;
 
     trace!(
         "got built results: {:#?}",

@@ -54,6 +54,7 @@ struct RcdsConfig {
     flag_regex: String,
     registry: Registry,
     defaults: Defaults,
+    brackets: Vec<Bracket>,
     point_classes: Vec<PointClass>,
     deploy: Map<String, ProfileDeploy>,
     profiles: Map<String, ProfileConfig>,
@@ -124,6 +125,15 @@ struct Resource {
 struct Defaults {
     point_class: String,
     resources: Resource,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[fully_pub]
+struct Bracket {
+    /// Name of this bracket
+    name: String,
+    /// Optional password needed to join the bracket
+    password: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
