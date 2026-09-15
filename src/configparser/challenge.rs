@@ -178,6 +178,9 @@ pub struct ChallengeConfig {
 
     flag: FlagType,
 
+    /// Challenges that need to be completed before this one is revealed.
+    depends_on: Option<Vec<String>>,
+
     #[serde(default)]
     #[serde_as(deserialize_as = "Vec<StringOrStruct>")]
     provide: Vec<ProvideConfig>, // optional if no files provided

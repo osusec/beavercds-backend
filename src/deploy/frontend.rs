@@ -12,7 +12,9 @@ use ureq::Agent;
 use crate::builder::BuildResult;
 use crate::configparser::challenge::{ExposeType, FlagType, PodType};
 use crate::configparser::config::ProfileConfig;
-use crate::configparser::{enabled_challenges, get_config, get_profile_config, ChallengeConfig};
+use crate::configparser::{
+    enabled_challenges, get_challenges, get_config, get_profile_config, ChallengeConfig,
+};
 use crate::utils::render_strict;
 
 use super::kubernetes::KubeDeployResult;
@@ -29,6 +31,7 @@ pub struct FrontendChalData {
     max_points: u32,
     flag: String,
     files: Vec<String>,
+    depends: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -131,6 +134,26 @@ pub async fn render_frontend_info(
         .find(|class| class.name == *point_class_name)
         .ok_or(anyhow!("challenge points are missing in config"))?;
 
+    // Convert dependency challenge names to id
+    let all_chals = get_challenges().map_err(|es| anyhow!("error getting challenges"))?;
+    let depends_id = chal
+        .depends_on
+        .clone()
+        .unwrap_or_default()
+        .iter()
+        .map(|name| {
+            // Find name in all challenges
+            all_chals
+                .iter()
+                .find(|c| &c.name == name)
+                // OK to panic via expect() here if lookup fails, dependent
+                // challenge names have aready been checked during verify()
+                .expect("challenge dependency not found")
+                .challenge_id
+                .to_string()
+        })
+        .collect_vec();
+
     let chal_data = FrontendChalData {
         id: chal.challenge_id.to_string(),
         name: chal.name.to_string(),
@@ -141,6 +164,7 @@ pub async fn render_frontend_info(
         max_points: point_info.max,
         flag,
         files: s3_result.uploaded_asset_urls.clone(),
+        depends: depends_id,
     };
 
     Ok(chal_data)
