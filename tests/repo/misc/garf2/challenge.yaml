@@ -5,8 +5,7 @@ description: |
 
 challenge_id: f41270
 
-depends_on:
-  - garf
+depends_on: garf
 
 flag:
   text: dam{garf2}

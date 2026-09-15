@@ -53,15 +53,13 @@ pub fn run() -> Result<()> {
         }
 
         // if chal has dependencies, do those exist?
-        if let Some(depends_on) = &chal.depends_on {
-            for dep_chal_name in depends_on {
-                if !chal_names.iter().contains(&dep_chal_name) {
-                    bail!(
-                        "prerequisite challenge '{}' for challenge {} does not exist in config",
-                        dep_chal_name,
-                        chal.slugify_slash()
-                    )
-                }
+        if let Some(dep_chal_name) = &chal.depends_on {
+            if !chal_names.iter().contains(&dep_chal_name) {
+                bail!(
+                    "prerequisite challenge '{}' for challenge {} does not exist in config",
+                    dep_chal_name,
+                    chal.slugify_slash()
+                )
             }
         }
     }

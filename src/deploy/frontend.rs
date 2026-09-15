@@ -31,7 +31,7 @@ pub struct FrontendChalData {
     max_points: u32,
     flag: String,
     files: Vec<String>,
-    depends: Vec<String>,
+    depends: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,23 +136,17 @@ pub async fn render_frontend_info(
 
     // Convert dependency challenge names to id
     let all_chals = get_challenges().map_err(|es| anyhow!("error getting challenges"))?;
-    let depends_id = chal
-        .depends_on
-        .clone()
-        .unwrap_or_default()
-        .iter()
-        .map(|name| {
-            // Find name in all challenges
-            all_chals
-                .iter()
-                .find(|c| &c.name == name)
-                // OK to panic via expect() here if lookup fails, dependent
-                // challenge names have aready been checked during verify()
-                .expect("challenge dependency not found")
-                .challenge_id
-                .to_string()
-        })
-        .collect_vec();
+    let depends_id = chal.depends_on.clone().map(|name| {
+        // Find name in all challenges
+        all_chals
+            .iter()
+            .find(|c| c.name == name)
+            // OK to panic via expect() here if lookup fails, dependent
+            // challenge names have aready been checked during verify()
+            .expect("challenge dependency not found")
+            .challenge_id
+            .to_string()
+    });
 
     let chal_data = FrontendChalData {
         id: chal.challenge_id.to_string(),

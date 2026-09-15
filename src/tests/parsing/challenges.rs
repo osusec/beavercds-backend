@@ -362,18 +362,13 @@ fn challenge_depends_on() {
             flag:
                 text: test{it-works}
 
-            depends_on:
-                - otherchal
-                - anotherchal
+            depends_on: otherchal
         "#,
         )?;
 
         let chals = parse_all().unwrap();
 
-        assert_eq!(
-            chals[0].depends_on,
-            Some(vec!["otherchal".to_string(), "anotherchal".to_string()])
-        );
+        assert_eq!(chals[0].depends_on, Some("otherchal".to_string()));
 
         Ok(())
     })
