@@ -31,6 +31,7 @@ deploy:
   testing:
     misc/survey: true
     misc/garf: true
+    misc/garf2: true
     pwn/notsh: true
     web/bar: true
     pwn/custom: true
