@@ -37,6 +37,7 @@ pub fn run() -> Result<()> {
             bail!("failed to validate challenges");
         }
     };
+    let chal_names = chals.iter().map(|c| &c.name).collect_vec();
 
     // double check specific things about challenges
     for chal in chals {
@@ -45,8 +46,19 @@ pub fn run() -> Result<()> {
             if !config.point_classes.iter().any(|p| &p.name == class) {
                 bail!(
                     "point class '{}' for challenge {} does not exist in config",
+                    class,
                     chal.slugify_slash(),
-                    class
+                )
+            }
+        }
+
+        // if chal has dependencies, do those exist?
+        if let Some(dep_chal_name) = &chal.depends_on {
+            if !chal_names.iter().contains(&dep_chal_name) {
+                bail!(
+                    "prerequisite challenge '{}' for challenge {} does not exist in config",
+                    dep_chal_name,
+                    chal.slugify_slash()
                 )
             }
         }
