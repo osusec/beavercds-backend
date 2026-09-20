@@ -16,6 +16,140 @@ fn all_yaml() {
             "rcds.yaml",
             r#"
                 flag_regex: test{[a-zA-Z_]+}
+                registry:
+                    domain: registry.example/test
+                    tag_format: "{{domain}}:custom-{{challenge}}.{{container}}"
+                    build:
+                        user: admin
+                        pass: notrealcreds
+                    cluster:
+                        user: cluster
+                        pass: alsofake
+
+                defaults:
+                    point_class: "easy"
+                    resources: { cpu: 1, memory: 500M }
+
+                brackets:
+                  - name: open
+                  - name: private
+                    password: asecret
+
+                point_classes:
+                  - name: "easy"
+                    min: 0
+                    max: 1337
+
+                deploy:
+                    testing:
+                        misc/foo: true
+                        web/bar: false
+
+                profiles:
+                    testing:
+                        frontend_url: https://frontend.example
+                        frontend_token: secretsecretsecret
+                        challenges_domain: chals.frontend.example
+                        kubecontext: testcluster
+                        s3:
+                            bucket_name: asset_testing
+                            endpoint: s3.example
+                            region: us-fake-1
+                            access_key: accesskey
+                            secret_key: secretkey
+                        dns:
+                            provider: somebody
+                            thing: whatever
+            "#,
+        )?;
+
+        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
+
+        let expected = RcdsConfig {
+            flag_regex: "test{[a-zA-Z_]+}".to_string(),
+            registry: Registry {
+                domain: "registry.example/test".to_string(),
+                tag_format: "{{domain}}:custom-{{challenge}}.{{container}}".to_string(),
+                build: UserPass {
+                    user: "admin".to_string(),
+                    pass: "notrealcreds".to_string(),
+                },
+                cluster: UserPass {
+                    user: "cluster".to_string(),
+                    pass: "alsofake".to_string(),
+                },
+            },
+            defaults: Defaults {
+                point_class: "easy".to_string(),
+                resources: Resource {
+                    cpu: 1,
+                    memory: "500M".to_string(),
+                },
+            },
+            brackets: vec![
+                Bracket {
+                    name: "open".to_string(),
+                    password: None,
+                },
+                Bracket {
+                    name: "private".to_string(),
+                    password: Some("asecret".to_string()),
+                },
+            ],
+            point_classes: vec![PointClass {
+                name: "easy".to_string(),
+                min: 0,
+                max: 1337,
+            }],
+
+            deploy: HashMap::from([(
+                "testing".to_string(),
+                ProfileDeploy {
+                    challenges: HashMap::from([
+                        ("misc/foo".to_string(), true),
+                        ("web/bar".to_string(), false),
+                    ]),
+                },
+            )]),
+            profiles: HashMap::from([(
+                "testing".to_string(),
+                ProfileConfig {
+                    frontend_url: "https://frontend.example".to_string(),
+                    frontend_token: "secretsecretsecret".to_string(),
+                    challenges_domain: "chals.frontend.example".to_string(),
+                    kubeconfig: None,
+                    kubecontext: "testcluster".to_string(),
+                    s3: S3Config {
+                        bucket_name: "asset_testing".to_string(),
+                        endpoint: "s3.example".to_string(),
+                        region: "us-fake-1".to_string(),
+                        access_key: "accesskey".to_string(),
+                        secret_key: "secretkey".to_string(),
+                    },
+                    dns: serde_yaml_ng::to_value(HashMap::from([
+                        ("provider", "somebody"),
+                        ("thing", "whatever"),
+                    ]))
+                    .unwrap(),
+                },
+            )]),
+        };
+
+        assert_eq!(config, expected);
+
+        Ok(())
+    });
+}
+
+#[test]
+/// Test parsing RCDS config where all fields are specified in the yaml
+fn default_registry_tag_format() {
+    figment::Jail::expect_with(|jail| {
+        jail.clear_env();
+        jail.create_file(
+            "rcds.yaml",
+            r#"
+                flag_regex: test{[a-zA-Z_]+}
 
                 registry:
                     domain: registry.example/test
@@ -29,6 +163,9 @@ fn all_yaml() {
                 defaults:
                     point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
+
+                brackets:
+                    - name: open
 
                 point_classes:
                   - name: "easy"
@@ -81,126 +218,10 @@ fn all_yaml() {
                     memory: "500M".to_string(),
                 },
             },
-            point_classes: vec![PointClass {
-                name: "easy".to_string(),
-                min: 0,
-                max: 1337,
+            brackets: vec![Bracket {
+                name: "open".to_string(),
+                password: None,
             }],
-
-            deploy: HashMap::from([(
-                "testing".to_string(),
-                ProfileDeploy {
-                    challenges: HashMap::from([
-                        ("web/bar".to_string(), false),
-                        ("misc/foo".to_string(), true),
-                    ]),
-                },
-            )]),
-            profiles: HashMap::from([(
-                "testing".to_string(),
-                ProfileConfig {
-                    frontend_url: "https://frontend.example".to_string(),
-                    frontend_token: "secretsecretsecret".to_string(),
-                    challenges_domain: "chals.frontend.example".to_string(),
-                    kubeconfig: None,
-                    kubecontext: "testcluster".to_string(),
-                    s3: S3Config {
-                        bucket_name: "asset_testing".to_string(),
-                        endpoint: "s3.example".to_string(),
-                        region: "us-fake-1".to_string(),
-                        access_key: "accesskey".to_string(),
-                        secret_key: "secretkey".to_string(),
-                    },
-                    dns: serde_yaml_ng::to_value(HashMap::from([
-                        ("provider", "somebody"),
-                        ("thing", "whatever"),
-                    ]))
-                    .unwrap(),
-                },
-            )]),
-        };
-
-        assert_eq!(config, expected);
-
-        Ok(())
-    });
-}
-
-#[test]
-/// Test parsing RCDS config where all fields are specified in the yaml
-fn registry_tag_format() {
-    figment::Jail::expect_with(|jail| {
-        jail.clear_env();
-        jail.create_file(
-            "rcds.yaml",
-            r#"
-                flag_regex: test{[a-zA-Z_]+}
-
-                registry:
-                    domain: registry.example/test
-                    tag_format: "{{domain}}:{{challenge}}.{{container}}"
-                    build:
-                        user: admin
-                        pass: notrealcreds
-                    cluster:
-                        user: cluster
-                        pass: alsofake
-
-                defaults:
-                    point_class: "easy"
-                    resources: { cpu: 1, memory: 500M }
-
-                point_classes:
-                  - name: "easy"
-                    min: 0
-                    max: 1337
-
-                deploy:
-                    testing:
-                        misc/foo: true
-                        web/bar: false
-
-                profiles:
-                    testing:
-                        frontend_url: https://frontend.example
-                        frontend_token: secretsecretsecret
-                        challenges_domain: chals.frontend.example
-                        kubecontext: testcluster
-                        s3:
-                            bucket_name: asset_testing
-                            endpoint: s3.example
-                            region: us-fake-1
-                            access_key: accesskey
-                            secret_key: secretkey
-                        dns:
-                            provider: somebody
-                            thing: whatever
-            "#,
-        )?;
-
-        let config = parse().map_err(|e| figment::Error::from(format!("{:?}", e)))?;
-
-        let expected = RcdsConfig {
-            flag_regex: "test{[a-zA-Z_]+}".to_string(),
-            registry: Registry {
-                domain: "registry.example/test".to_string(),
-                tag_format: "{{domain}}:{{challenge}}.{{container}}".to_string(),
-                build: UserPass {
-                    user: "admin".to_string(),
-                    pass: "notrealcreds".to_string(),
-                },
-                cluster: UserPass {
-                    user: "cluster".to_string(),
-                    pass: "alsofake".to_string(),
-                },
-            },
-            defaults: Defaults {
-                point_class: "easy".to_string(),
-                resources: Resource {
-                    cpu: 1,
-                    memory: "500M".to_string(),
-                },
-            },
             point_classes: vec![PointClass {
                 name: "easy".to_string(),
                 min: 0,
@@ -268,6 +289,9 @@ fn yaml_with_env_overrides() {
                 defaults:
                     point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
+
+                brackets:
+                  - name: open
 
                 point_classes:
                   - name: "easy"
@@ -341,6 +365,9 @@ fn partial_yaml_with_env() {
                 defaults:
                     point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
+
+                brackets:
+                  - name: open
 
                 point_classes:
                   - name: "easy"
@@ -437,6 +464,9 @@ fn bad_yaml_missing_secrets() {
                 defaults:
                     point_class: "easy"
                     resources: { cpu: 1, memory: 500M }
+
+                brackets:
+                  - name: open
 
                 point_classes:
                   - name: "easy"

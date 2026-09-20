@@ -15,6 +15,11 @@ defaults:
   point_class: "standard"
   resources: { cpu: 1, memory: 500M }
 
+brackets:
+  - name: open
+  - name: private
+    password: notsecure
+
 point_classes:
   - name: "standard"
     min: 100
