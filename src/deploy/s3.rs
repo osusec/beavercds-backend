@@ -17,11 +17,12 @@ use crate::utils::TryJoinAll;
 
 /// Artifacts and information about a deployed challenges.
 pub struct S3DeployResult {
-    pub uploaded_asset_urls: Vec<String>,
+    /// Presigned download URL used by frontend
+    pub presigned_asset_urls: Vec<String>,
 }
 
-/// Upload files to frontend asset bucket
-/// Returns urls of upload files.
+/// Upload all asset files for a challenge to the chal assets bucket,
+/// Returns presigned urls of upload files for access.
 pub async fn upload_challenge_assets(
     profile_name: &str,
     chal: &ChallengeConfig,
@@ -45,25 +46,17 @@ pub async fn upload_challenge_assets(
                 .await
                 .with_context(|| format!("failed to upload file {asset_file:?}"))?;
 
-            // S3 API does not have a method to get the public URL, but does
-            // have one to create a presigned URL. We need the server to give us
-            // the correct URL since we can't reliably assume the format of the
-            // full URL for non-AWS storage providers that all have different
-            // formats for combining the endpoint and region.
-            //
-            // Generate a presigned url with expiry in one second, just to make
-            // sure this can't be used.
+            // Generate a presigned url with enough expiry to last through a
+            // usual event (1 week).
+            // const DURATION = time::Duration::from_weeks(1).as_secs();
+            const EXPIRY: u32 = 7 * 60 * 60;
             let presigned_url = bucket
-                .presign_get(path_in_bucket.to_string_lossy(), 1, None)
+                .presign_get(path_in_bucket.to_string_lossy(), EXPIRY, None)
                 .await
                 .context("failed to fetch presigned url")?;
-            trace!("got temporary presigned GET: {presigned_url}");
+            trace!("got presigned GET: {presigned_url}");
 
-            // Strip off the signing parameters to get the public object url
-            let mut url = Url::parse(&presigned_url)?;
-            url.set_query(None);
-
-            Ok(url.to_string())
+            Ok(presigned_url)
         })
         .try_join_all()
         .await
@@ -71,10 +64,11 @@ pub async fn upload_challenge_assets(
 
     // return new BuildResult with assets as bucket path
     Ok(S3DeployResult {
-        uploaded_asset_urls: uploaded,
+        presigned_asset_urls: uploaded,
     })
 }
 
+/// Upload a single file to a bucket.
 async fn upload_single_file(
     bucket: &Bucket,
     chal: &ChallengeConfig,
