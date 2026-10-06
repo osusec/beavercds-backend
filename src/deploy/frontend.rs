@@ -157,7 +157,7 @@ pub async fn render_frontend_info(
         min_points: point_info.min,
         max_points: point_info.max,
         flag,
-        files: s3_result.uploaded_asset_urls.clone(),
+        files: s3_result.presigned_asset_urls.clone(),
         depends: depends_id,
     };
 
