@@ -185,21 +185,6 @@ pub fn bucket_client(config: &config::S3Config) -> Result<&s3::Bucket> {
     }
 }
 
-/// create public/anonymous bucket client for passed profile config
-// this does not need a oncelock and can be created on-demand, as this is not used in very many places
-pub fn bucket_client_anonymous(config: &config::S3Config) -> Result<Box<s3::Bucket>> {
-    trace!("creating anon bucket client");
-    // TODO: once_cell this so it reuses the same bucket?
-    let region = s3::Region::Custom {
-        region: config.region.clone(),
-        endpoint: config.endpoint.clone(),
-    };
-    let creds = s3::creds::Credentials::anonymous()?;
-    let bucket = s3::Bucket::new(&config.bucket_name, region, creds)?.with_path_style();
-
-    Ok(bucket)
-}
-
 //
 // Kubernetes stuff
 //
