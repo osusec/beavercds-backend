@@ -17,10 +17,6 @@ pub async fn check(profile_name: &str) -> Result<()> {
 
     let bucket = bucket_client(&profile.s3)?;
 
-    if !bucket.exists().await? {
-        bail!("bucket {} does not exist!", profile.s3.bucket_name);
-    }
-
     // try uploading file to bucket
     debug!("uploading test file to bucket");
     let test_file = ("/beavercds-test-file", "access test file!");
