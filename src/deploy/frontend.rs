@@ -120,7 +120,10 @@ pub async fn render_frontend_info(
         FlagType::String { string: text } => text.clone(),
         FlagType::Regex { regex } => unimplemented!("flag regex not implemented"),
         FlagType::Verifier { verifier } => unimplemented!("flag custom verifier not implemented"),
-    };
+    }
+    // Make sure we're not sending extra whitespace e.g. file trailing newlines
+    .trim()
+    .to_string();
 
     // Get point class from challenge or use default from repo config
     let point_class_name = chal
