@@ -132,9 +132,31 @@ pods:
 ```
 :::
 
+### Custom manifests
 
+If you have special requirements for how your challenge is deployed that doesn't
+fit our template, you can provide a raw Kubernetes manifest file instead of our
+template, which will get applied directly. You can still define an image to
+build, but it will not be templated in at all.
 
-### 5. Provide files to users
+```yaml [challenge.yaml] {6}
+pods:
+  - name: main
+    build:
+      context: .
+      dockerfile: Dockerfile
+    manifest: ./path/to/manifest.yaml
+```
+
+> [!important] 
+> This will *not* perform any templating or add any additional
+  resources! If anything in the manifest need to be exposed or use an image
+  built from the repo, that must be hardcoded in the manifest!
+
+See [the `manifest` field
+reference](/reference/challenge-yaml-reference#manifest) for more details.
+
+## 5. Provide files to users
 
 ::: tip
 If your challenge **does not** have any file handouts, skip this section.
