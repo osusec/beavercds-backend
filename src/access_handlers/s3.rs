@@ -2,8 +2,9 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use s3;
 use tokio;
 use tracing::{debug, error, info, trace, warn};
+use ureq;
 
-use crate::clients::{bucket_client, bucket_client_anonymous};
+use crate::clients::bucket_client;
 use crate::configparser::{
     config::{ProfileConfig, S3Config},
     get_config, get_profile_config,
@@ -15,10 +16,6 @@ pub async fn check(profile_name: &str) -> Result<()> {
     let profile = get_profile_config(profile_name)?;
 
     let bucket = bucket_client(&profile.s3)?;
-
-    if !bucket.exists().await? {
-        bail!("bucket {} does not exist!", profile.s3.bucket_name);
-    }
 
     // try uploading file to bucket
     debug!("uploading test file to bucket");
@@ -40,20 +37,19 @@ pub async fn check(profile_name: &str) -> Result<()> {
         bail!("uploaded test file contents do not match, somehow!?");
     }
 
-    // download as anonymous to check public access
-    debug!("downloading test file as public user");
-    let public_bucket = bucket_client_anonymous(&profile.s3)?;
-    let from_public = public_bucket
-        .get_object(test_file.0)
+    // download via presigned link like users will
+    debug!("downloading test file via presigned link");
+    let presigned_url = bucket
+        .presign_get(test_file.0, 60, None)
         .await
-        .with_context(|| {
-            anyhow!(
-                "public download from asset bucket {:?} failed",
-                profile.s3.bucket_name
-            )
-        })?;
-    if from_public.bytes() != test_file.1 {
-        bail!("contents of public bucket do not match uploaded file");
+        .context("failed to fetch presigned url")?;
+    trace!("got presigned GET: {presigned_url}");
+
+    let presigned_download = ureq::get(presigned_url)
+        .call()
+        .context("could not download test file via presigned link")?;
+    if presigned_download.into_body().read_to_string()? != test_file.1 {
+        bail!("downloaded test file contents do not match, somehow!?");
     }
 
     // clean up test file after checks

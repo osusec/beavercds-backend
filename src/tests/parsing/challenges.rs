@@ -121,6 +121,8 @@ fn challenge_two_levels() {
                     string: "test{it-works}".to_string()
                 },
 
+                depends_on: None,
+
                 provide: vec![],
                 pods: vec![],
             }
@@ -321,6 +323,52 @@ fn challenge_no_point_class() {
         let chals = parse_all().unwrap();
 
         assert_eq!(chals[0].point_class, Some("example".to_string()));
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenges can omit depends_on if it has no prerequisites
+fn challenge_no_depends_on() {
+    figment::Jail::expect_with(|jail| {
+        jail.create_file("rcds.yaml", VALID_CONFIG)?;
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(dir.join("challenge.yaml"), VALID_CHAL)?;
+
+        let chals = parse_all().unwrap();
+
+        assert_eq!(chals[0].depends_on, None);
+
+        Ok(())
+    })
+}
+
+#[test]
+/// Challenge with depends_on should parse correctly
+fn challenge_depends_on() {
+    figment::Jail::expect_with(|jail| {
+        jail.create_file("rcds.yaml", VALID_CONFIG)?;
+        let dir = jail.create_dir("foo/test")?;
+        jail.create_file(
+            dir.join("challenge.yaml"),
+            r#"
+            name: testchal
+            author: nobody
+            description: just a test challenge
+            point_class: example
+            challenge_id: asdf
+
+            flag:
+                text: test{it-works}
+
+            depends_on: otherchal
+        "#,
+        )?;
+
+        let chals = parse_all().unwrap();
+
+        assert_eq!(chals[0].depends_on, Some("otherchal".to_string()));
 
         Ok(())
     })

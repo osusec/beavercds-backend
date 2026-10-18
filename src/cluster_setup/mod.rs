@@ -43,22 +43,22 @@ enum HelmSource {
 }
 
 pub async fn install_ingress(profile: &config::ProfileConfig) -> Result<()> {
-    info!("deploying haproxy ingress chart...");
+    info!("deploying traefik ingress chart...");
 
-    const VALUES: &str = include_str!("../asset_files/setup_manifests/haproxy-ingress.helm.yaml");
+    const VALUES: &str = include_str!("../asset_files/setup_manifests/traefik-ingress.helm.yaml");
     trace!("values:\n{}", VALUES);
 
     install_helm_chart(
         profile,
         HelmSource::Oci {
-            chart: "oci://ghcr.io/haproxytech/helm-charts/kubernetes-ingress",
+            chart: "oci://ghcr.io/traefik/helm/traefik",
         },
         None,
-        "haproxy",
+        "traefik",
         INGRESS_NAMESPACE,
         VALUES,
     )
-    .context("failed to install haproxy ingress helm chart")
+    .context("failed to install traefik ingress helm chart")
 }
 
 pub async fn install_certmanager(profile: &config::ProfileConfig) -> Result<()> {

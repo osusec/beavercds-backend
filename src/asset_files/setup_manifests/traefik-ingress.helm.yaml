@@ -1,9 +1,14 @@
-controller:
-  ingressClass: beavercds
-
-  service:
-    type: LoadBalancer
-    annotations:
+providers:
+  kubernetesIngress:
+    enabled: true
+  kubernetesGateway:
+    enabled: false
+api:
+  dashboard: false
+ingressClass:
+  name: "beavercds"
+service:
+  annotations:
       # AWS-specific annotations
       service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
       service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp

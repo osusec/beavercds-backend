@@ -1,0 +1,14 @@
+name: garf2
+author: some guy
+description: |
+  wow you liked the other one so much
+
+challenge_id: f41270
+
+depends_on: garf
+
+flag:
+  text: dam{garf2}
+
+provide:
+  - garf2.webp
