@@ -142,6 +142,22 @@ flag:
 Regex flags are not implemented yet and setting one does nothing
 :::
 
+## `depends_on`
+
+- type: `string`
+- no default (optional)
+
+The [`name`](#name) of another challenge that players must complete before this
+challenge is revealed to them on the scoreboard. This can only depend on a 
+single prerequisite challenge.
+
+```yaml
+name: thing-ii
+# ...
+
+depends_on: thing-i
+```
+
 ## `provide`
 
 - type: list of `string`/`dict`
