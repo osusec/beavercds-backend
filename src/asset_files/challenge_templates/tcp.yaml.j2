@@ -9,6 +9,7 @@ metadata:
     # still use separate domain for these, since exposed LoadBalancer services
     # will all have different ips from each other
     external-dns.alpha.kubernetes.io/hostname: "{{ name_slug }}.{{ domain }}"
+    external-dns.kubernetes.io/hostname: "{{ name_slug }}.{{ domain }}"
 
     # aws-specific annotations for lb options
     service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"

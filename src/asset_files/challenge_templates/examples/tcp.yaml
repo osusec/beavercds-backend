@@ -54,6 +54,7 @@ metadata:
   annotations:
     app.kubernetes.io/managed-by: rcds
     external-dns.alpha.kubernetes.io/hostname: foo.beaverctf.detjens.dev
+    external-dns.kubernetes.io/hostname: foo.beaverctf.detjens.dev
 spec:
   type: LoadBalancer
   selector:
