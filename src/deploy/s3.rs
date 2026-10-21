@@ -49,7 +49,7 @@ pub async fn upload_challenge_assets(
             // Generate a presigned url with enough expiry to last through a
             // usual event (1 week).
             // const DURATION = time::Duration::from_weeks(1).as_secs();
-            const EXPIRY: u32 = 7 * 60 * 60;
+            const EXPIRY: u32 = 7 * 24 * 60 * 60;
             let presigned_url = bucket
                 .presign_get(path_in_bucket.to_string_lossy(), EXPIRY, None)
                 .await
