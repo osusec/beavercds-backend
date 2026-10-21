@@ -97,8 +97,8 @@ pub async fn render_frontend_info(
             hostname => hostname,
             port => chal_port(chal),
             nc => format!("`nc {} {}`", hostname, chal_port(chal)),
-            url => format!("[https://{hostname}](https://{hostname})", ),
-            link => format!("https://{hostname}"),
+            url => format!("https://{hostname}"),
+            link => format!("[https://{hostname}](https://{hostname})"),
         },
     )?;
 
