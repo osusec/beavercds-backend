@@ -1,10 +1,13 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
-use std::path::Path;
+use regex::Regex;
+
+use std::io::Read;
 use std::process::exit;
+use std::{fs::File, path::Path};
 use tracing::{debug, error, info, trace, warn};
 
-use crate::configparser::{get_challenges, get_config, get_profile_deploy};
+use crate::configparser::{challenge::FlagType, get_challenges, get_config, get_profile_deploy};
 
 pub fn run() -> Result<()> {
     info!("validating config...");
@@ -39,8 +42,61 @@ pub fn run() -> Result<()> {
     };
     let chal_names = chals.iter().map(|c| &c.name).collect_vec();
 
+    let flag_regex_str = &get_config()?.flag_regex;
+    // warn about unescaped {} that most flag formats use
+    if Regex::new(r"[^\\][{}]")?.is_match(flag_regex_str) {
+        warn!("");
+        warn!("Unescaped '{{' or '}}' found in flag_regex, did you mean to escape it?");
+        warn!("");
+    }
+    let flag_regex = Regex::new(flag_regex_str).with_context(|| {
+        format!(
+            "flag_regex '{:}' is not a valid regular expression",
+            flag_regex_str
+        )
+    })?;
+
     // double check specific things about challenges
     for chal in chals {
+        match &chal.flag {
+            FlagType::RawString(string) | FlagType::String { string } => {
+                // does flag string match format regex?
+                if !flag_regex.is_match(string) {
+                    bail!(
+                        "Flag '{:}' for challenge {:?} does not match expected format ({})",
+                        string,
+                        chal.slugify_slash(),
+                        flag_regex_str
+                    )
+                }
+            }
+            FlagType::File { file } => {
+                // is referenced flag file readable?
+                let full_path = chal.directory.join(file);
+                let mut flag = String::new();
+                File::open(&full_path)
+                    .with_context(|| {
+                        format!(
+                            "could not open flag file {:?} for challenge {:?}",
+                            full_path, chal.directory
+                        )
+                    })?
+                    .read_to_string(&mut flag)?;
+                let flag = flag.trim();
+                // does flag string match format regex?
+                if !flag_regex.is_match(flag) {
+                    bail!(
+                        "Flag '{:}' for challenge {:?} does not match expected format ({})",
+                        flag,
+                        chal.slugify_slash(),
+                        flag_regex_str
+                    )
+                }
+            }
+            FlagType::Regex { regex } => unimplemented!(),
+            FlagType::Verifier { verifier } => unimplemented!(),
+        }
+
         // does point class exist in default config?
         if let Some(class) = &chal.point_class {
             if !config.point_classes.iter().any(|p| &p.name == class) {
