@@ -11,4 +11,5 @@ flag:
   text: dam{garf2}
 
 provide:
-  - garf2.webp
+  - as: garf2.webp
+    include: images/grumpy-garf.webp

@@ -46,9 +46,10 @@ pub async fn extract_asset(
             Ok(files.iter().map(|f| chal.directory.join(f)).collect_vec())
         }
         ProvideConfig::FromRepoRename { from, to } => {
-            std::fs::copy(chal.directory.join(from), chal.directory.join(to))
+            let to_fullpath = chal.directory.join(to);
+            std::fs::copy(chal.directory.join(from), &to_fullpath)
                 .with_context(|| format!("could not copy repo file {from:?} to {to:?}"))?;
-            Ok(vec![to.clone()])
+            Ok(vec![to_fullpath])
         }
         ProvideConfig::FromRepoArchive {
             files,
