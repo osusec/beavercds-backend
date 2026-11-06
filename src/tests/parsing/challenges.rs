@@ -395,6 +395,8 @@ fn challenge_provide() {
             provide:
                 - foo.txt
 
+                - include: foo2.txt
+
                 - include:
                     - bar.txt
                     - baz.txt
@@ -428,8 +430,11 @@ fn challenge_provide() {
         assert_eq!(
             chals[0].provide,
             vec![
-                ProvideConfig::FromRepo {
-                    files: vec!["foo.txt".into()]
+                ProvideConfig::FromRepoSingle {
+                    file: "foo.txt".into()
+                },
+                ProvideConfig::FromRepoSingle {
+                    file: "foo2.txt".into()
                 },
                 ProvideConfig::FromRepo {
                     files: vec!["bar.txt".into(), "baz.txt".into()]
