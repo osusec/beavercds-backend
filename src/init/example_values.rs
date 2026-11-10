@@ -12,6 +12,10 @@ pub static DEFAULTS_CLASS: &str = "easy";
 pub static DEFAULTS_RESOURCES_CPU: i64 = 1;
 pub static DEFAULTS_RESOURCES_MEMORY: &str = "500M";
 
+pub static BRACKETS_OPEN_NAME: &str = "open";
+pub static BRACKETS_CLOSED_NAME: &str = "closed";
+pub static BRACKETS_CLOSED_PW: &str = "somethingsecret";
+
 pub static POINTS_EASY_CLASS: &str = "easy";
 pub static POINTS_EASY_MIN: u32 = 200;
 pub static POINTS_EASY_MAX: u32 = 500;
