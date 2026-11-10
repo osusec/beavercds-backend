@@ -1,4 +1,4 @@
-flag_regex: dam{[a-zA-Z...]}
+flag_regex: dam\{\w+\}
 
 registry:
   domain: localhost:5000/damctf
